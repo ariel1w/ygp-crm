@@ -15,4 +15,5 @@ export const TEAM_MEMBERS = [
   "Osher",
   "Natasha",
   "Shachar",
+  "Ziv",
 ] as const;

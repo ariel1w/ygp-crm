@@ -251,8 +251,7 @@ export default function ContactsPage() {
               <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="followUp" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <th className="sticky right-0 bg-[#faf8f6] z-10"></th>
+              <th className="sticky right-0 bg-[#faf8f6] z-10">Follow-Up</th>
             </tr>
           </thead>
           <tbody>
@@ -334,38 +333,38 @@ export default function ContactsPage() {
                       onSave={(val) => patchContact(c.id, { nextAction: val })}
                     />
                   </td>
-                  <td>
-                    <InlineDate
-                      value={
-                        c.nextActionDate
-                          ? format(new Date(c.nextActionDate), "yyyy-MM-dd")
-                          : ""
-                      }
-                      displayValue={
-                        c.nextActionDate
-                          ? format(new Date(c.nextActionDate), "MMM d")
-                          : ""
-                      }
-                      placeholder="Set date"
-                      onSave={(val) =>
-                        patchContact(c.id, { nextActionDate: val })
-                      }
-                    />
-                  </td>
                   <td className="sticky right-0 z-10" style={{ backgroundColor: si.bgColor }}>
-                    <button
-                      onClick={() => setQuickLogContact(c)}
-                      className="btn btn-secondary text-xs py-1 px-2 whitespace-nowrap"
-                    >
-                      Log
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <InlineDate
+                        value={
+                          c.nextActionDate
+                            ? format(new Date(c.nextActionDate), "yyyy-MM-dd")
+                            : ""
+                        }
+                        displayValue={
+                          c.nextActionDate
+                            ? format(new Date(c.nextActionDate), "MMM d")
+                            : ""
+                        }
+                        placeholder="Set date"
+                        onSave={(val) =>
+                          patchContact(c.id, { nextActionDate: val })
+                        }
+                      />
+                      <button
+                        onClick={() => setQuickLogContact(c)}
+                        className="btn btn-secondary text-xs py-1 px-2 whitespace-nowrap"
+                      >
+                        Log
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={10} className="text-center text-muted py-8">
+                <td colSpan={9} className="text-center text-muted py-8">
                   No contacts found.
                 </td>
               </tr>
