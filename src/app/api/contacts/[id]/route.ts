@@ -68,6 +68,7 @@ export async function PATCH(
   if ("nextActionDate" in body)
     data.nextActionDate = body.nextActionDate ? new Date(body.nextActionDate) : null;
   if ("owner" in body) data.owner = body.owner || null;
+  if ("lastContactBy" in body) data.lastContactBy = body.lastContactBy || null;
   if ("company" in body) data.company = body.company || null;
   if ("companyType" in body) data.companyType = body.companyType || null;
   if ("lastContactDate" in body)

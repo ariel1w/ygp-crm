@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { COMPANY_TYPES, TEAM_MEMBERS } from "@/lib/constants";
 import { getContactStatus, type ContactStatus } from "@/lib/status";
-import { InlineText, InlineDate, InlineProjects } from "@/components/InlineEdit";
+import { InlineText, InlineDate, InlineSelect, InlineProjects } from "@/components/InlineEdit";
 import QuickLog from "@/components/QuickLog";
 
 interface Contact {
@@ -16,6 +16,7 @@ interface Contact {
   companyType: string | null;
   owner: string | null;
   lastContactDate: string | null;
+  lastContactBy: string | null;
   lastInteraction: string | null;
   nextAction: string | null;
   nextActionDate: string | null;
@@ -132,6 +133,10 @@ export default function ContactsPage() {
           av = a.projects.map((p) => p.project.name).join(", ").toLowerCase();
           bv = b.projects.map((p) => p.project.name).join(", ").toLowerCase();
           break;
+        case "lastContactBy":
+          av = (a.lastContactBy || "").toLowerCase();
+          bv = (b.lastContactBy || "").toLowerCase();
+          break;
         case "lastContact":
           av = a.lastContactDate || "";
           bv = b.lastContactDate || "";
@@ -237,6 +242,7 @@ export default function ContactsPage() {
               <SortTh col="name" label="Name" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="company" label="Company" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="projects" label="Projects" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="lastContactBy" label="Last Contact By" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="followUp" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
@@ -278,6 +284,14 @@ export default function ContactsPage() {
                       onSave={(projectIds) =>
                         patchContact(c.id, { projectIds })
                       }
+                    />
+                  </td>
+                  <td>
+                    <InlineSelect
+                      value={c.lastContactBy || ""}
+                      options={TEAM_MEMBERS.map((m) => ({ value: m, label: m }))}
+                      placeholder="Who?"
+                      onSave={(val) => patchContact(c.id, { lastContactBy: val })}
                     />
                   </td>
                   <td>
@@ -338,7 +352,7 @@ export default function ContactsPage() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center text-muted py-8">
+                <td colSpan={9} className="text-center text-muted py-8">
                   No contacts found.
                 </td>
               </tr>

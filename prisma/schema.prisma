@@ -16,6 +16,7 @@ model Contact {
   companyType     String?
   owner           String?
   lastContactDate DateTime?
+  lastContactBy   String?
   lastInteraction String?
   nextAction      String?
   nextActionDate  DateTime?

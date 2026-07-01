@@ -22,6 +22,7 @@ export async function POST(
     where: { id },
     data: {
       lastContactDate: note.date,
+      lastContactBy: body.author || null,
       lastInteraction: body.content,
     },
   });

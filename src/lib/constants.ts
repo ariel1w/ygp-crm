@@ -9,9 +9,10 @@ export const COMPANY_TYPES = [
 
 export const TEAM_MEMBERS = [
   "Yoav",
-  "Osher",
   "Ariel",
   "Shani",
-  "Natasha",
   "Maayan",
+  "Osher",
+  "Natasha",
+  "Shachar",
 ] as const;
