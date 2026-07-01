@@ -18,6 +18,7 @@ model Contact {
   lastContactDate DateTime?
   lastContactBy   String?
   lastInteraction String?
+  lastAction      String?
   nextAction      String?
   nextActionDate  DateTime?
   createdAt       DateTime @default(now())

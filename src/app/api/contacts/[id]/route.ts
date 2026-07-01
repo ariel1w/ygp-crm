@@ -64,6 +64,7 @@ export async function PATCH(
   const body = await req.json();
 
   const data: Record<string, unknown> = {};
+  if ("lastAction" in body) data.lastAction = body.lastAction || null;
   if ("nextAction" in body) data.nextAction = body.nextAction || null;
   if ("nextActionDate" in body)
     data.nextActionDate = body.nextActionDate ? new Date(body.nextActionDate) : null;

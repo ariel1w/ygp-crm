@@ -18,6 +18,7 @@ interface Contact {
   lastContactDate: string | null;
   lastContactBy: string | null;
   lastInteraction: string | null;
+  lastAction: string | null;
   nextAction: string | null;
   nextActionDate: string | null;
   projects: { project: { id: string; name: string } }[];
@@ -141,6 +142,10 @@ export default function ContactsPage() {
           av = a.lastContactDate || "";
           bv = b.lastContactDate || "";
           break;
+        case "lastAction":
+          av = (a.lastAction || "").toLowerCase();
+          bv = (b.lastAction || "").toLowerCase();
+          break;
         case "nextAction":
           av = (a.nextAction || "").toLowerCase();
           bv = (b.nextAction || "").toLowerCase();
@@ -244,6 +249,7 @@ export default function ContactsPage() {
               <SortTh col="projects" label="Projects" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastContactBy" label="Last Contact By" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="followUp" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <th className="sticky right-0 bg-[#faf8f6] z-10"></th>
@@ -316,8 +322,15 @@ export default function ContactsPage() {
                   </td>
                   <td className="min-w-[250px]">
                     <InlineTextArea
+                      value={c.lastAction || ""}
+                      placeholder="Set last action"
+                      onSave={(val) => patchContact(c.id, { lastAction: val })}
+                    />
+                  </td>
+                  <td className="min-w-[250px]">
+                    <InlineTextArea
                       value={c.nextAction || ""}
-                      placeholder="Set action"
+                      placeholder="Set next action"
                       onSave={(val) => patchContact(c.id, { nextAction: val })}
                     />
                   </td>
@@ -352,7 +365,7 @@ export default function ContactsPage() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center text-muted py-8">
+                <td colSpan={10} className="text-center text-muted py-8">
                   No contacts found.
                 </td>
               </tr>
