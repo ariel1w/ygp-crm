@@ -246,7 +246,7 @@ export default function ContactsPage() {
               <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="followUp" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <th></th>
+              <th className="sticky right-0 bg-[#faf8f6] z-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -339,7 +339,7 @@ export default function ContactsPage() {
                       }
                     />
                   </td>
-                  <td>
+                  <td className="sticky right-0 z-10" style={{ backgroundColor: si.bgColor }}>
                     <button
                       onClick={() => setQuickLogContact(c)}
                       className="btn btn-secondary text-xs py-1 px-2 whitespace-nowrap"
