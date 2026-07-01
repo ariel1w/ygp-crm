@@ -124,7 +124,11 @@ export default function ContactDetailPage({
     }));
   };
 
-  if (!contact) return <p className="text-muted text-sm py-8">Loading...</p>;
+  if (!contact) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="inline-block w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+    </div>
+  );
 
   const statusInfo = getContactStatus(contact);
   const daysSince = getDaysSinceContact(contact.lastContactDate);

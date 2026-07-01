@@ -44,7 +44,11 @@ export default function ProjectDetailPage({
     router.push("/projects");
   };
 
-  if (!project) return <p className="text-muted text-sm py-8">Loading...</p>;
+  if (!project) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="inline-block w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-3xl">

@@ -57,8 +57,11 @@ export default function Dashboard() {
   const newContacts = enriched.filter((c) => c.statusInfo.status === "new");
   const active = enriched.filter((c) => c.statusInfo.status === "active");
 
-  if (loading)
-    return <p className="text-muted text-sm py-8">Loading...</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="inline-block w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div>
