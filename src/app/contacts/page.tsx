@@ -319,14 +319,14 @@ export default function ContactsPage() {
                       }
                     />
                   </td>
-                  <td className="min-w-[250px]">
+                  <td className="min-w-[150px]">
                     <InlineTextArea
                       value={c.lastAction || ""}
                       placeholder="Set last action"
                       onSave={(val) => patchContact(c.id, { lastAction: val })}
                     />
                   </td>
-                  <td className="min-w-[250px]">
+                  <td className="min-w-[150px]">
                     <InlineTextArea
                       value={c.nextAction || ""}
                       placeholder="Set next action"
