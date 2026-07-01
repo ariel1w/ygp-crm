@@ -58,6 +58,67 @@ export function InlineText({
   );
 }
 
+export function InlineTextArea({
+  value,
+  placeholder,
+  onSave,
+}: {
+  value: string;
+  placeholder?: string;
+  onSave: (val: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing && ref.current) {
+      ref.current.focus();
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [editing]);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm whitespace-pre-wrap"
+      >
+        {value || <span className="text-muted italic">{placeholder || "—"}</span>}
+      </button>
+    );
+  }
+
+  return (
+    <textarea
+      ref={ref}
+      value={draft}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        e.target.style.height = "auto";
+        e.target.style.height = e.target.scrollHeight + "px";
+      }}
+      onBlur={() => {
+        setEditing(false);
+        if (draft !== value) onSave(draft);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          setDraft(value);
+          setEditing(false);
+        }
+      }}
+      className="text-sm py-0.5 px-1 -mx-1 w-full resize-none overflow-hidden"
+      rows={2}
+    />
+  );
+}
+
 export function InlineDate({
   value,
   displayValue,

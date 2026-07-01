@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { COMPANY_TYPES, TEAM_MEMBERS } from "@/lib/constants";
 import { getContactStatus, type ContactStatus } from "@/lib/status";
-import { InlineText, InlineDate, InlineSelect, InlineProjects } from "@/components/InlineEdit";
+import { InlineText, InlineTextArea, InlineDate, InlineSelect, InlineProjects } from "@/components/InlineEdit";
 import QuickLog from "@/components/QuickLog";
 
 interface Contact {
@@ -314,8 +314,8 @@ export default function ContactsPage() {
                       }
                     />
                   </td>
-                  <td className="max-w-[200px]">
-                    <InlineText
+                  <td className="min-w-[250px]">
+                    <InlineTextArea
                       value={c.nextAction || ""}
                       placeholder="Set action"
                       onSave={(val) => patchContact(c.id, { nextAction: val })}
