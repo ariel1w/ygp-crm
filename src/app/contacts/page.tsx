@@ -48,8 +48,8 @@ export default function ContactsPage() {
   const [projectFilter, setProjectFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContactStatus | "">("");
   const [quickLogContact, setQuickLogContact] = useState<Contact | null>(null);
-  const [sortCol, setSortCol] = useState<string>("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortCol, setSortCol] = useState<string>("lastContact");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const toggleSort = (col: string) => {
     if (sortCol === col) {
