@@ -31,7 +31,7 @@ export default function QuickLog({
   onSaved: () => void;
 }) {
   const [author, setAuthor] = useState("");
-  const [summary, setSummary] = useState("");
+  const [notes, setNotes] = useState<string[]>([""]);
   const [nextAction, setNextAction] = useState(contact.nextAction || "");
   const [nextActionDate, setNextActionDate] = useState(
     contact.nextActionDate
@@ -45,19 +45,35 @@ export default function QuickLog({
     setNextActionDate(format(addDays(new Date(), days), "yyyy-MM-dd"));
   };
 
+  const updateNote = (index: number, value: string) => {
+    setNotes((prev) => prev.map((n, i) => (i === index ? value : n)));
+  };
+
+  const addNote = () => {
+    setNotes((prev) => [...prev, ""]);
+  };
+
+  const removeNote = (index: number) => {
+    if (notes.length === 1) return;
+    setNotes((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = async () => {
     setSaving(true);
 
-    // If logging an interaction, create a note
-    if (mode === "log" && summary.trim()) {
-      await fetch(`/api/contacts/${contact.id}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          author: author || "Shani",
-          content: summary,
-        }),
-      });
+    // Save each non-empty note as a separate note entry
+    if (mode === "log") {
+      const nonEmpty = notes.filter((n) => n.trim());
+      for (const content of nonEmpty) {
+        await fetch(`/api/contacts/${contact.id}/notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            author: author || "Shani",
+            content,
+          }),
+        });
+      }
     }
 
     // Always update follow-up info
@@ -74,9 +90,11 @@ export default function QuickLog({
     onSaved();
   };
 
+  const hasNotes = notes.some((n) => n.trim());
+
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg border border-border">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg border border-border max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -118,23 +136,46 @@ export default function QuickLog({
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                  What happened?
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Quick summary of the meeting or call..."
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  autoFocus
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Notes</label>
+                  <button
+                    type="button"
+                    onClick={addNote}
+                    className="text-xs font-bold text-primary hover:text-primary-hover w-6 h-6 flex items-center justify-center rounded-full hover:bg-primary-light transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {notes.map((note, i) => (
+                    <div key={i} className="flex gap-2">
+                      <textarea
+                        rows={2}
+                        placeholder={i === 0 ? "Add a note..." : "Another note..."}
+                        value={note}
+                        onChange={(e) => updateNote(i, e.target.value)}
+                        autoFocus={i === 0}
+                        className="flex-1"
+                      />
+                      {notes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeNote(i)}
+                          className="text-muted hover:text-danger text-sm self-start mt-2"
+                        >
+                          x
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}
 
           <div className="mb-3">
             <label className="block text-sm font-medium mb-1">
-              Next action
+              Next Action
             </label>
             <input
               placeholder="e.g., Send screener, Follow up on deal, Check in..."
@@ -180,7 +221,7 @@ export default function QuickLog({
             <button
               onClick={handleSave}
               className="btn btn-primary flex-1"
-              disabled={saving || (mode === "log" && !summary.trim())}
+              disabled={saving || (mode === "log" && !hasNotes)}
             >
               {saving ? "Saving..." : "Save"}
             </button>
