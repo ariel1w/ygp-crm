@@ -240,18 +240,18 @@ export default function ContactsPage() {
       )}
 
       <div className="card p-0 overflow-hidden overflow-x-auto">
-        <table>
+        <table className="table-fixed w-full" style={{ minWidth: "900px" }}>
           <thead>
             <tr>
               <SortTh col="status" label="Status" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="name" label="Name" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="company" label="Company" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="company" label="Co." sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="projects" label="Projects" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="lastContactBy" label="Last Contact By" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="lastContactBy" label="By" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="lastContact" label="Last" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="nextContactDate" label="Next Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="nextContactDate" label="Next Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <th></th>
             </tr>
           </thead>
