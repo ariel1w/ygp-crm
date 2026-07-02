@@ -259,7 +259,7 @@ export default function ContactDetailPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Next Action Date</label>
+              <label className="block text-sm font-medium mb-1">Follow-Up Date</label>
               <input
                 type="date"
                 value={form.nextActionDate}
@@ -328,7 +328,7 @@ export default function ContactDetailPage({
                   <dd className="font-medium">{contact.nextAction || "None set"}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted text-xs">Due Date</dt>
+                  <dt className="text-muted text-xs">Follow-Up Date</dt>
                   <dd>
                     {contact.nextActionDate
                       ? format(new Date(contact.nextActionDate), "MMM d, yyyy")

@@ -251,7 +251,7 @@ export default function ContactsPage() {
               <SortTh col="lastContact" label="Last" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <SortTh col="nextContactDate" label="Next Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="nextContactDate" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <th></th>
             </tr>
           </thead>

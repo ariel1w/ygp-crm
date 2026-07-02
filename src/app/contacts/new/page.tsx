@@ -142,7 +142,7 @@ export default function NewContactPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Next Action Date
+              Follow-Up Date
             </label>
             <input
               type="date"

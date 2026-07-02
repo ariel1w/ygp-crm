@@ -146,7 +146,7 @@ export default function QuickLog({
 
           <div className="mb-2">
             <label className="block text-sm font-medium mb-1">
-              Follow up by
+              Follow-Up Date
             </label>
             <input
               type="date"
