@@ -150,7 +150,7 @@ export default function ContactsPage() {
           av = (a.nextAction || "").toLowerCase();
           bv = (b.nextAction || "").toLowerCase();
           break;
-        case "followUp":
+        case "nextContactDate":
           av = a.nextActionDate || "";
           bv = b.nextActionDate || "";
           break;
@@ -251,6 +251,7 @@ export default function ContactsPage() {
               <SortTh col="lastContact" label="Last Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+              <SortTh col="nextContactDate" label="Next Contact" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <th></th>
             </tr>
           </thead>
@@ -331,6 +332,24 @@ export default function ContactsPage() {
                       value={c.nextAction || ""}
                       placeholder="Set next action"
                       onSave={(val) => patchContact(c.id, { nextAction: val })}
+                    />
+                  </td>
+                  <td>
+                    <InlineDate
+                      value={
+                        c.nextActionDate
+                          ? format(new Date(c.nextActionDate), "yyyy-MM-dd")
+                          : ""
+                      }
+                      displayValue={
+                        c.nextActionDate
+                          ? format(new Date(c.nextActionDate), "MMM d")
+                          : ""
+                      }
+                      placeholder="Set date"
+                      onSave={(val) =>
+                        patchContact(c.id, { nextActionDate: val })
+                      }
                     />
                   </td>
                   <td>
