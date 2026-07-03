@@ -100,6 +100,12 @@ export default function ReadingListPage() {
 
   const inProgressCount = submissions.filter((s) => s.inProgress).length;
 
+  const totalNotNotified = useMemo(() => {
+    return submissions.filter(
+      (s) => !s.inProgress && (!s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא")
+    ).length;
+  }, [submissions]);
+
   const filtered = useMemo(() => {
     if (activeTab === IN_PROGRESS) {
       return submissions.filter((s) => s.inProgress);
@@ -170,6 +176,12 @@ export default function ReadingListPage() {
               <span className="ml-1 opacity-60">({inProgressCount})</span>
             )}
           </button>
+
+          {totalNotNotified > 0 && (
+            <div className="px-3 py-1.5 mb-2 text-xs font-bold text-danger bg-red-50 rounded-lg">
+              Not Notified: {totalNotNotified}
+            </div>
+          )}
 
           <div className="border-t border-border my-2" />
 
