@@ -160,7 +160,7 @@ export default function ReadingListPage() {
                 : "text-foreground hover:bg-gray-100"
             }`}
           >
-            בהתקדמות
+            In Progress
             {inProgressCount > 0 && (
               <span className="ml-1 opacity-60">({inProgressCount})</span>
             )}
@@ -250,7 +250,7 @@ export default function ReadingListPage() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-white drop-shadow">
             {activeTab === IN_PROGRESS
-              ? "פרויקטים בהתקדמות"
+              ? "In Progress"
               : ALL_WEEKS.find((w) => w.key === activeTab)?.label || activeTab}
             <span className="ml-2 text-sm font-normal opacity-70">
               ({filtered.length})

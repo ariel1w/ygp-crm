@@ -9,13 +9,13 @@ export interface WeekInfo {
   year: number;
 }
 
-const MONTH_NAMES_HE = [
-  "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
-  "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר",
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export function getMonthName(month: number): string {
-  return MONTH_NAMES_HE[month];
+  return MONTH_NAMES[month];
 }
 
 export function generateWeeks(startYear: number, endYear: number): WeekInfo[] {
