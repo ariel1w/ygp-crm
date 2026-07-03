@@ -101,7 +101,7 @@ export default function ReadingListPage() {
 
   const totalNotNotified = useMemo(() => {
     return submissions.filter(
-      (s) => !s.inProgress && (!s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא")
+      (s) => !s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא"
     ).length;
   }, [submissions]);
 
