@@ -20,8 +20,9 @@ export function getMonthName(month: number): string {
 
 export function generateWeeks(startYear: number, endYear: number): WeekInfo[] {
   const weeks: WeekInfo[] = [];
-  // Start from first Sunday of startYear
+  // Start from first Sunday on or after Jan 1 of startYear
   let current = startOfWeek(new Date(startYear, 0, 1), { weekStartsOn: 0 });
+  if (current.getFullYear() < startYear) current = addWeeks(current, 1);
   const end = new Date(endYear + 1, 0, 1);
 
   while (current < end) {
