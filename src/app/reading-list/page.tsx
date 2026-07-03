@@ -173,7 +173,7 @@ export default function ReadingListPage() {
           >
             In Progress
             {inProgressCount > 0 && (
-              <span className="ml-1 opacity-60">({inProgressCount})</span>
+              <span className="ml-1">{inProgressCount}</span>
             )}
           </button>
 
