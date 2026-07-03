@@ -22,9 +22,8 @@ interface Submission {
 }
 
 const UPDATED_OPTIONS = [
-  { value: "כן", label: "כן" },
-  { value: "עודכן", label: "עודכן" },
-  { value: "לא", label: "לא" },
+  { value: "Yes", label: "Yes" },
+  { value: "No", label: "No" },
 ];
 
 const IN_PROGRESS = "__in_progress__";
@@ -279,8 +278,8 @@ export default function ReadingListPage() {
                 <th>YGP Contact</th>
                 <th>Email / Phone</th>
                 <th>Status</th>
-                <th>Updated By</th>
-                <th>Updated?</th>
+                <th>Notified By</th>
+                <th>Notified?</th>
                 {activeTab !== IN_PROGRESS && <th>In Progress</th>}
                 <th></th>
               </tr>
