@@ -299,7 +299,10 @@ export default function ReadingListPage() {
           <h1 className="text-xl font-bold text-white drop-shadow">
             {isInProgressTab
               ? "In Progress"
-              : ALL_WEEKS.find((w) => w.key === activeTab)?.label || "Reading List"}
+              : (() => {
+                  const w = ALL_WEEKS.find((w) => w.key === activeTab);
+                  return w ? `${w.label}, ${w.year}` : "Reading List";
+                })()}
           </h1>
           <div className="flex gap-2">
             <button onClick={addInlineSubmission} className="btn btn-secondary bg-white">
