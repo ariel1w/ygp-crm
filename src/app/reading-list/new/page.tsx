@@ -1,12 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { TEAM_MEMBERS } from "@/lib/constants";
+import { generateWeeks } from "@/lib/weeks";
+
+const ALL_WEEKS = generateWeeks(2026, 2027);
+
+function getCurrentWeekKey(): string {
+  const now = new Date();
+  for (const w of ALL_WEEKS) {
+    if (now >= w.start && now <= w.end) return w.key;
+  }
+  return ALL_WEEKS[0].key;
+}
 
 export default function NewSubmissionPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const currentWeek = useMemo(() => getCurrentWeekKey(), []);
+
   const [form, setForm] = useState({
     projectName: "",
     senderName: "",
@@ -14,6 +27,7 @@ export default function NewSubmissionPage() {
     ygpContact: "",
     senderEmail: "",
     status: "",
+    week: currentWeek,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
