@@ -49,6 +49,16 @@ export default function Nav() {
               >
                 Reading List
               </Link>
+              <Link
+                href="/slate"
+                className={`px-3 py-1.5 text-sm font-bold rounded-full transition-colors ${
+                  pathname.startsWith("/slate")
+                    ? "bg-foreground text-white"
+                    : "text-muted hover:text-primary"
+                }`}
+              >
+                Central Project List
+              </Link>
             </div>
             {isCRM && (
               <div className="flex items-center gap-1 border-l border-border pl-4">

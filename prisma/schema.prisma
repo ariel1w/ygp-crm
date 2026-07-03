@@ -60,6 +60,31 @@ model Note {
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
 
+model SlateProject {
+  id             String   @id @default(cuid())
+  name           String
+  stage          String   // development, production, sales, reality, library
+  creator        String?
+  format         String?
+  episodeLength  String?
+  genre          String?
+  keyPeople      String?
+  broadcaster    String?
+  shootingDates  String?
+  locations      String?
+  budget         String?
+  status         String?
+  nextStep       String?
+  priority       String?
+  contact        String?
+  whereAired     String?
+  distributor    String?
+  airDate        String?
+  ip             String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 model Submission {
   id            String   @id @default(cuid())
   projectName   String
