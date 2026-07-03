@@ -257,14 +257,14 @@ export default function ReadingListPage() {
             </span>
           </h1>
           <div className="flex gap-2">
-            <button onClick={addInlineSubmission} className="btn btn-primary">
-              + Add Row
+            <button onClick={addInlineSubmission} className="btn btn-secondary bg-white">
+              + Add Manually
             </button>
             <Link
               href="/reading-list/new"
-              className="btn btn-secondary bg-white"
+              className="btn btn-primary"
             >
-              + Full Form
+              + Add With Form
             </Link>
           </div>
         </div>
