@@ -82,11 +82,10 @@ export default function ReadingListPage() {
     loadData();
   }, [loadData]);
 
-  // Count submissions and not-notified per week
+  // Count submissions and not-notified per week (include in-progress since they have a week now)
   const weekCounts = useMemo(() => {
     const counts = new Map<string, { total: number; notNotified: number }>();
     for (const s of submissions) {
-      if (s.inProgress) continue;
       if (!s.week) continue;
       const prev = counts.get(s.week) || { total: 0, notNotified: 0 };
       prev.total++;
@@ -110,8 +109,10 @@ export default function ReadingListPage() {
     if (activeTab === IN_PROGRESS) {
       return submissions.filter((s) => s.inProgress);
     }
-    return submissions.filter((s) => s.week === activeTab && !s.inProgress);
+    return submissions.filter((s) => s.week === activeTab);
   }, [submissions, activeTab]);
+
+  const isInProgressTab = activeTab === IN_PROGRESS;
 
   const patchSubmission = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
@@ -321,9 +322,9 @@ export default function ReadingListPage() {
                 <th>YGP Contact</th>
                 <th>Email / Phone</th>
                 <th>Status</th>
-                <th>Notified By</th>
-                <th>Notified?</th>
-                {activeTab !== IN_PROGRESS && <th>In Progress</th>}
+                {!isInProgressTab && <th>Notified By</th>}
+                {!isInProgressTab && <th>Notified?</th>}
+                {!isInProgressTab && <th>In Progress</th>}
                 <th></th>
               </tr>
             </thead>
@@ -400,30 +401,34 @@ export default function ReadingListPage() {
                       onSave={(val) => patchSubmission(s.id, { status: val })}
                     />
                   </td>
-                  <td>
-                    <InlineSelect
-                      value={s.updatedBy || ""}
-                      options={TEAM_MEMBERS.map((m) => ({
-                        value: m,
-                        label: m,
-                      }))}
-                      placeholder="Who?"
-                      onSave={(val) =>
-                        patchSubmission(s.id, { updatedBy: val })
-                      }
-                    />
-                  </td>
-                  <td>
-                    <InlineSelect
-                      value={s.wasUpdated || ""}
-                      options={UPDATED_OPTIONS}
-                      placeholder="—"
-                      onSave={(val) =>
-                        patchSubmission(s.id, { wasUpdated: val })
-                      }
-                    />
-                  </td>
-                  {activeTab !== IN_PROGRESS && (
+                  {!isInProgressTab && (
+                    <td>
+                      <InlineSelect
+                        value={s.updatedBy || ""}
+                        options={TEAM_MEMBERS.map((m) => ({
+                          value: m,
+                          label: m,
+                        }))}
+                        placeholder="Who?"
+                        onSave={(val) =>
+                          patchSubmission(s.id, { updatedBy: val })
+                        }
+                      />
+                    </td>
+                  )}
+                  {!isInProgressTab && (
+                    <td>
+                      <InlineSelect
+                        value={s.wasUpdated || ""}
+                        options={UPDATED_OPTIONS}
+                        placeholder="—"
+                        onSave={(val) =>
+                          patchSubmission(s.id, { wasUpdated: val })
+                        }
+                      />
+                    </td>
+                  )}
+                  {!isInProgressTab && (
                     <td className="text-center">
                       <input
                         type="checkbox"
@@ -450,7 +455,7 @@ export default function ReadingListPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td
-                    colSpan={activeTab !== IN_PROGRESS ? 10 : 9}
+                    colSpan={isInProgressTab ? 7 : 10}
                     className="text-center text-muted py-8"
                   >
                     No submissions in this week.{" "}
