@@ -82,12 +82,18 @@ export default function ReadingListPage() {
     loadData();
   }, [loadData]);
 
-  // Count submissions per week
+  // Count submissions and not-notified per week
   const weekCounts = useMemo(() => {
-    const counts = new Map<string, number>();
+    const counts = new Map<string, { total: number; notNotified: number }>();
     for (const s of submissions) {
       if (s.inProgress) continue;
-      if (s.week) counts.set(s.week, (counts.get(s.week) || 0) + 1);
+      if (!s.week) continue;
+      const prev = counts.get(s.week) || { total: 0, notNotified: 0 };
+      prev.total++;
+      if (!s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא") {
+        prev.notNotified++;
+      }
+      counts.set(s.week, prev);
     }
     return counts;
   }, [submissions]);
@@ -168,7 +174,14 @@ export default function ReadingListPage() {
           <div className="border-t border-border my-2" />
 
           {/* Year/Month/Week tree */}
-          {Array.from(grouped.entries()).map(([year, months]) => (
+          {Array.from(grouped.entries()).map(([year, months]) => {
+            const yearTotal = Array.from(months.values())
+              .flat()
+              .reduce((sum, w) => sum + (weekCounts.get(w.key)?.total || 0), 0);
+            const yearNotNotified = Array.from(months.values())
+              .flat()
+              .reduce((sum, w) => sum + (weekCounts.get(w.key)?.notNotified || 0), 0);
+            return (
             <div key={year}>
               <button
                 onClick={() =>
@@ -177,13 +190,23 @@ export default function ReadingListPage() {
                 className="w-full text-left px-3 py-1.5 text-sm font-bold text-foreground hover:bg-gray-100 rounded-lg"
               >
                 {expandedYear === year ? "▾" : "▸"} {year}
+                {yearTotal > 0 && (
+                  <span className="ml-1 text-xs font-normal opacity-60">({yearTotal})</span>
+                )}
+                {yearNotNotified > 0 && (
+                  <span className="ml-1 text-xs font-bold text-danger">({yearNotNotified})</span>
+                )}
               </button>
 
               {expandedYear === year && (
                 <div className="ml-2">
                   {Array.from(months.entries()).map(([month, weeks]) => {
-                    const monthCount = weeks.reduce(
-                      (sum, w) => sum + (weekCounts.get(w.key) || 0),
+                    const monthTotal = weeks.reduce(
+                      (sum, w) => sum + (weekCounts.get(w.key)?.total || 0),
+                      0
+                    );
+                    const monthNotNotified = weeks.reduce(
+                      (sum, w) => sum + (weekCounts.get(w.key)?.notNotified || 0),
                       0
                     );
                     return (
@@ -198,9 +221,14 @@ export default function ReadingListPage() {
                         >
                           {expandedMonth === month ? "▾" : "▸"}{" "}
                           {getMonthName(month)}
-                          {monthCount > 0 && (
+                          {monthTotal > 0 && (
                             <span className="ml-1 opacity-60">
-                              ({monthCount})
+                              ({monthTotal})
+                            </span>
+                          )}
+                          {monthNotNotified > 0 && (
+                            <span className="ml-1 font-bold text-danger">
+                              ({monthNotNotified})
                             </span>
                           )}
                         </button>
@@ -208,7 +236,9 @@ export default function ReadingListPage() {
                         {expandedMonth === month && (
                           <div className="ml-3">
                             {weeks.map((w) => {
-                              const count = weekCounts.get(w.key) || 0;
+                              const wc = weekCounts.get(w.key);
+                              const total = wc?.total || 0;
+                              const notNotified = wc?.notNotified || 0;
                               const isCurrent = w.key === currentWeekKey;
                               return (
                                 <button
@@ -224,9 +254,14 @@ export default function ReadingListPage() {
                                 >
                                   {w.label}
                                   {isCurrent && activeTab !== w.key && " ●"}
-                                  {count > 0 && (
-                                    <span className="ml-1 opacity-60">
-                                      ({count})
+                                  {total > 0 && (
+                                    <span className={`ml-1 ${activeTab === w.key ? "opacity-70" : "opacity-60"}`}>
+                                      ({total})
+                                    </span>
+                                  )}
+                                  {notNotified > 0 && (
+                                    <span className={`ml-1 font-bold ${activeTab === w.key ? "text-white" : "text-danger"}`}>
+                                      ({notNotified})
                                     </span>
                                   )}
                                 </button>
@@ -240,7 +275,8 @@ export default function ReadingListPage() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
