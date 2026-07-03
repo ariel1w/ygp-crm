@@ -30,7 +30,7 @@ const UPDATED_OPTIONS = [
 const IN_PROGRESS = "__in_progress__";
 
 // Generate weeks for 2026-2027
-const ALL_WEEKS = generateWeeks(2026, 2027);
+const ALL_WEEKS = generateWeeks(2026, new Date().getFullYear() + 1);
 
 // Find the current week
 function getCurrentWeekKey(): string {

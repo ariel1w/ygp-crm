@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { TEAM_MEMBERS } from "@/lib/constants";
 import { generateWeeks } from "@/lib/weeks";
 
-const ALL_WEEKS = generateWeeks(2026, 2027);
+const ALL_WEEKS = generateWeeks(2026, new Date().getFullYear() + 1);
 
 function getCurrentWeekKey(): string {
   const now = new Date();
