@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { TEAM_MEMBERS } from "@/lib/constants";
@@ -17,6 +17,7 @@ interface Submission {
   updatedBy: string | null;
   wasUpdated: string | null;
   inProgress: boolean;
+  week: string | null;
 }
 
 const UPDATED_OPTIONS = [
@@ -25,22 +26,61 @@ const UPDATED_OPTIONS = [
   { value: "לא", label: "לא" },
 ];
 
+const IN_PROGRESS_TAB = "פרויקטים בהתקדמות";
+
 export default function ReadingListPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "progress" | "pending">("all");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<string>(IN_PROGRESS_TAB);
+  const [newWeekName, setNewWeekName] = useState("");
+  const [showNewWeek, setShowNewWeek] = useState(false);
 
   const loadData = useCallback(() => {
     fetch("/api/submissions")
       .then((r) => r.json())
-      .then(setSubmissions)
+      .then((data: Submission[]) => {
+        setSubmissions(data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Get all unique weeks + in progress tab
+  const tabs = useMemo(() => {
+    const weeks = new Set<string>();
+    for (const s of submissions) {
+      if (s.inProgress) continue;
+      if (s.week) weeks.add(s.week);
+    }
+    // Sort weeks (most recent first based on the date pattern)
+    const sorted = Array.from(weeks).sort((a, b) => {
+      // Try to parse first date from the week name
+      const getDate = (w: string) => {
+        const m = w.match(/(\d{1,2})[./](\d{1,2})/);
+        if (!m) return 0;
+        return parseInt(m[2]) * 100 + parseInt(m[1]);
+      };
+      return getDate(b) - getDate(a);
+    });
+    return [IN_PROGRESS_TAB, ...sorted];
+  }, [submissions]);
+
+  // Set initial active tab to most recent week if no in-progress items
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+      setActiveTab(tabs[0]);
+    }
+  }, [tabs, activeTab]);
+
+  const filtered = useMemo(() => {
+    if (activeTab === IN_PROGRESS_TAB) {
+      return submissions.filter((s) => s.inProgress);
+    }
+    return submissions.filter((s) => s.week === activeTab && !s.inProgress);
+  }, [submissions, activeTab]);
 
   const patchSubmission = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
@@ -63,17 +103,28 @@ export default function ReadingListPage() {
     setSubmissions((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const filtered = submissions.filter((s) => {
-    if (filter === "progress" && !s.inProgress) return false;
-    if (filter === "pending" && s.inProgress) return false;
-    if (
-      search &&
-      !(s.projectName || "").toLowerCase().includes(search.toLowerCase()) &&
-      !(s.senderName || "").toLowerCase().includes(search.toLowerCase())
-    )
-      return false;
-    return true;
-  });
+  const addInlineSubmission = async () => {
+    const isProgress = activeTab === IN_PROGRESS_TAB;
+    const res = await fetch("/api/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectName: "",
+        week: isProgress ? null : activeTab,
+        inProgress: isProgress,
+        dateReceived: new Date().toISOString(),
+      }),
+    });
+    const created = await res.json();
+    setSubmissions((prev) => [created, ...prev]);
+  };
+
+  const addNewWeek = () => {
+    if (!newWeekName.trim()) return;
+    setActiveTab(newWeekName.trim());
+    setShowNewWeek(false);
+    setNewWeekName("");
+  };
 
   if (loading)
     return (
@@ -84,42 +135,70 @@ export default function ReadingListPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-white drop-shadow">
-          Reading List ({filtered.length})
+          Reading List
         </h1>
-        <Link href="/reading-list/new" className="btn btn-primary">
-          + New Submission
-        </Link>
+        <div className="flex gap-2">
+          <button onClick={addInlineSubmission} className="btn btn-primary">
+            + Add Row
+          </button>
+          <Link href="/reading-list/new" className="btn btn-secondary bg-white">
+            + Full Form
+          </Link>
+        </div>
       </div>
 
-      <div className="flex gap-3 mb-4 bg-white/90 backdrop-blur rounded-xl p-3">
-        <input
-          placeholder="Search project or sender..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
-        />
-        <div className="flex gap-1 bg-[#f5f3f0] rounded-full p-1">
+      {/* Week tabs */}
+      <div className="flex items-center gap-1 mb-4 bg-white/90 backdrop-blur rounded-xl p-2 overflow-x-auto">
+        {tabs.map((tab) => {
+          const count =
+            tab === IN_PROGRESS_TAB
+              ? submissions.filter((s) => s.inProgress).length
+              : submissions.filter((s) => s.week === tab && !s.inProgress).length;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition-colors ${
+                activeTab === tab
+                  ? "bg-foreground text-white"
+                  : "text-muted hover:text-foreground hover:bg-gray-100"
+              }`}
+            >
+              {tab === IN_PROGRESS_TAB ? "בהתקדמות" : tab}
+              <span className="ml-1 opacity-60">({count})</span>
+            </button>
+          );
+        })}
+        {showNewWeek ? (
+          <div className="flex items-center gap-1">
+            <input
+              value={newWeekName}
+              onChange={(e) => setNewWeekName(e.target.value)}
+              placeholder="e.g. 03.07-09.07"
+              className="text-xs py-1 px-2 w-28"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addNewWeek();
+                if (e.key === "Escape") setShowNewWeek(false);
+              }}
+            />
+            <button
+              onClick={addNewWeek}
+              className="text-xs font-bold text-primary"
+            >
+              Add
+            </button>
+          </div>
+        ) : (
           <button
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${filter === "all" ? "bg-white text-foreground shadow-sm" : "text-muted"}`}
-            onClick={() => setFilter("all")}
+            onClick={() => setShowNewWeek(true)}
+            className="px-2 py-1.5 text-xs font-bold text-primary hover:bg-primary-light rounded-full transition-colors"
           >
-            All
+            + Week
           </button>
-          <button
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${filter === "progress" ? "bg-white text-foreground shadow-sm" : "text-muted"}`}
-            onClick={() => setFilter("progress")}
-          >
-            In Progress
-          </button>
-          <button
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${filter === "pending" ? "bg-white text-foreground shadow-sm" : "text-muted"}`}
-            onClick={() => setFilter("pending")}
-          >
-            Pending
-          </button>
-        </div>
+        )}
       </div>
 
       <div className="card p-0 overflow-hidden overflow-x-auto">
@@ -134,7 +213,7 @@ export default function ReadingListPage() {
               <th>Status</th>
               <th>Updated By</th>
               <th>Updated?</th>
-              <th>In Progress</th>
+              {activeTab !== IN_PROGRESS_TAB && <th>In Progress</th>}
               <th></th>
             </tr>
           </thead>
@@ -234,16 +313,20 @@ export default function ReadingListPage() {
                     }
                   />
                 </td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
-                    checked={s.inProgress}
-                    onChange={(e) =>
-                      patchSubmission(s.id, { inProgress: e.target.checked })
-                    }
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                </td>
+                {activeTab !== IN_PROGRESS_TAB && (
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      checked={s.inProgress}
+                      onChange={(e) =>
+                        patchSubmission(s.id, {
+                          inProgress: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                  </td>
+                )}
                 <td>
                   <button
                     onClick={() => deleteSubmission(s.id)}
@@ -256,8 +339,17 @@ export default function ReadingListPage() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={10} className="text-center text-muted py-8">
-                  No submissions found.
+                <td
+                  colSpan={activeTab !== IN_PROGRESS_TAB ? 10 : 9}
+                  className="text-center text-muted py-8"
+                >
+                  No submissions in this tab.{" "}
+                  <button
+                    onClick={addInlineSubmission}
+                    className="text-primary hover:underline"
+                  >
+                    Add one
+                  </button>
                 </td>
               </tr>
             )}
