@@ -27,7 +27,7 @@ export function generateWeeks(startYear: number, endYear: number): WeekInfo[] {
 
   while (current < end) {
     const weekEnd = endOfWeek(current, { weekStartsOn: 0 });
-    const label = `${format(current, "d.M")}-${format(weekEnd, "d.M")}`;
+    const label = `${format(current, "MMMM d")} - ${format(weekEnd, "MMMM d")}`;
     const key = `${getYear(current)}-W${format(current, "ww")}`;
 
     weeks.push({
