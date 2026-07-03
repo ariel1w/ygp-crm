@@ -48,25 +48,41 @@ export default function RootLayout({
                     priority
                   />
                 </Link>
-                <div className="flex items-center gap-1">
-                  <Link
-                    href="/contacts"
-                    className="px-4 py-1.5 text-sm font-bold text-muted hover:text-primary transition-colors"
-                  >
-                    Contacts
-                  </Link>
-                  <Link
-                    href="/"
-                    className="px-4 py-1.5 text-sm font-bold text-muted hover:text-primary transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/projects"
-                    className="px-4 py-1.5 text-sm font-bold text-muted hover:text-primary transition-colors"
-                  >
-                    Projects
-                  </Link>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 border-r border-border pr-4">
+                    <Link
+                      href="/contacts"
+                      className="px-3 py-1.5 text-sm font-bold text-muted hover:text-primary transition-colors"
+                    >
+                      CRM
+                    </Link>
+                    <Link
+                      href="/reading-list"
+                      className="px-3 py-1.5 text-sm font-bold text-muted hover:text-primary transition-colors"
+                    >
+                      Reading List
+                    </Link>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href="/contacts"
+                      className="px-2 py-1.5 text-xs font-semibold text-muted hover:text-primary transition-colors"
+                    >
+                      Contacts
+                    </Link>
+                    <Link
+                      href="/"
+                      className="px-2 py-1.5 text-xs font-semibold text-muted hover:text-primary transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/projects"
+                      className="px-2 py-1.5 text-xs font-semibold text-muted hover:text-primary transition-colors"
+                    >
+                      Projects
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

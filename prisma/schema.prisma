@@ -59,3 +59,19 @@ model Note {
 
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 }
+
+model Submission {
+  id            String   @id @default(cuid())
+  projectName   String
+  senderName    String?
+  dateReceived  DateTime?
+  ygpContact    String?
+  senderEmail   String?
+  status        String?
+  updatedBy     String?
+  wasUpdated    String?
+  week          String?
+  inProgress    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
