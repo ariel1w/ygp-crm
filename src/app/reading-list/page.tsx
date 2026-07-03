@@ -89,7 +89,7 @@ export default function ReadingListPage() {
       if (!s.week) continue;
       const prev = counts.get(s.week) || { total: 0, notNotified: 0 };
       prev.total++;
-      if (!s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא") {
+      if (s.wasUpdated !== "Yes") {
         prev.notNotified++;
       }
       counts.set(s.week, prev);
@@ -101,7 +101,7 @@ export default function ReadingListPage() {
 
   const totalNotNotified = useMemo(() => {
     return submissions.filter(
-      (s) => !s.wasUpdated || s.wasUpdated === "No" || s.wasUpdated === "לא"
+      (s) => s.wasUpdated !== "Yes"
     ).length;
   }, [submissions]);
 
