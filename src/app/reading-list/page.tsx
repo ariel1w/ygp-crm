@@ -325,6 +325,7 @@ export default function ReadingListPage() {
                 {!isInProgressTab && <th>Notified By</th>}
                 {!isInProgressTab && <th>Notified?</th>}
                 {!isInProgressTab && <th>In Progress</th>}
+                {isInProgressTab && <th></th>}
                 <th></th>
               </tr>
             </thead>
@@ -433,13 +434,29 @@ export default function ReadingListPage() {
                       <input
                         type="checkbox"
                         checked={s.inProgress}
-                        onChange={(e) =>
-                          patchSubmission(s.id, {
-                            inProgress: e.target.checked,
-                          })
-                        }
+                        onChange={() => {
+                          if (s.inProgress) {
+                            alert("To remove from In Progress, go to the In Progress tab.");
+                          } else {
+                            patchSubmission(s.id, { inProgress: true });
+                          }
+                        }}
                         className="w-4 h-4 cursor-pointer"
                       />
+                    </td>
+                  )}
+                  {isInProgressTab && (
+                    <td>
+                      <button
+                        onClick={() => {
+                          if (confirm("Remove this project from In Progress?")) {
+                            patchSubmission(s.id, { inProgress: false });
+                          }
+                        }}
+                        className="text-xs text-muted hover:text-danger"
+                      >
+                        Remove
+                      </button>
                     </td>
                   )}
                   <td>
