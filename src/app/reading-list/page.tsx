@@ -296,12 +296,7 @@ export default function ReadingListPage() {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-white drop-shadow">
-            {activeTab === IN_PROGRESS
-              ? "In Progress"
-              : ALL_WEEKS.find((w) => w.key === activeTab)?.label || activeTab}
-            <span className="ml-2 text-sm font-normal opacity-70">
-              ({filtered.length})
-            </span>
+            Reading List
           </h1>
           <div className="flex gap-2">
             <button onClick={addInlineSubmission} className="btn btn-secondary bg-white">
