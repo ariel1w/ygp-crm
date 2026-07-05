@@ -124,17 +124,31 @@ export function InlineDate({
   displayValue,
   placeholder,
   onSave,
+  showNow,
 }: {
   value: string;
   displayValue?: string;
   placeholder?: string;
   onSave: (val: string) => void;
+  showNow?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (editing) ref.current?.focus();
+  }, [editing]);
+
+  useEffect(() => {
+    if (!editing) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setEditing(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [editing]);
 
   if (!editing) {
@@ -149,20 +163,33 @@ export function InlineDate({
   }
 
   return (
-    <input
-      ref={ref}
-      type="date"
-      value={value}
-      onChange={(e) => {
-        onSave(e.target.value);
-        setEditing(false);
-      }}
-      onBlur={() => setEditing(false)}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setEditing(false);
-      }}
-      className="text-sm py-0.5 px-1 -mx-1"
-    />
+    <div ref={containerRef} className="flex items-center gap-1">
+      <input
+        ref={ref}
+        type="date"
+        value={value}
+        onChange={(e) => {
+          onSave(e.target.value);
+          setEditing(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setEditing(false);
+        }}
+        className="text-sm py-0.5 px-1 -mx-1"
+      />
+      {showNow && (
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            onSave(new Date().toISOString());
+            setEditing(false);
+          }}
+          className="btn btn-primary text-xs py-0.5 px-2 whitespace-nowrap"
+        >
+          Now
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -215,6 +242,131 @@ export function InlineSelect({
         </option>
       ))}
     </select>
+  );
+}
+
+export function InlineMultiSelect({
+  value,
+  options,
+  placeholder,
+  onSave,
+  max = 2,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  onSave: (val: string) => void;
+  max?: number;
+}) {
+  const values = value ? value.split(", ").filter(Boolean) : [];
+  const [open, setOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setEditingIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const handleSelect = (selected: string, index: number) => {
+    const next = [...values];
+    if (index < next.length) {
+      if (!selected) {
+        next.splice(index, 1);
+      } else {
+        next[index] = selected;
+      }
+    } else {
+      if (selected) next.push(selected);
+    }
+    onSave(next.join(", "));
+    setEditingIndex(null);
+    setOpen(next.length === 0 ? false : true);
+  };
+
+  const handleRemove = (index: number) => {
+    const next = values.filter((_, i) => i !== index);
+    onSave(next.join(", "));
+    if (next.length === 0) setOpen(false);
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => { setOpen(true); if (values.length === 0) setEditingIndex(0); }}
+        className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
+      >
+        {values.length > 0 ? (
+          values.join(", ")
+        ) : (
+          <span className="text-muted italic">{placeholder || "—"}</span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <div className="flex flex-wrap items-center gap-1 px-1 py-0.5 -mx-1 min-h-[24px] text-sm">
+        {values.map((v, i) => (
+          <span key={i} className="inline-flex items-center gap-0.5 bg-blue-100 text-blue-800 rounded px-1.5 py-0.5 text-xs">
+            {editingIndex === i ? (
+              <select
+                autoFocus
+                value={v}
+                onChange={(e) => handleSelect(e.target.value, i)}
+                onBlur={() => setEditingIndex(null)}
+                className="text-xs bg-transparent border-none p-0 outline-none"
+              >
+                <option value="">Remove</option>
+                {options.filter((o) => !values.includes(o.value) || o.value === v).map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <span className="cursor-pointer" onClick={() => setEditingIndex(i)}>{v}</span>
+                <button
+                  onClick={() => handleRemove(i)}
+                  className="text-blue-500 hover:text-blue-700 ml-0.5 leading-none"
+                >
+                  ×
+                </button>
+              </>
+            )}
+          </span>
+        ))}
+        {values.length < max && editingIndex !== values.length && (
+          <button
+            onClick={() => setEditingIndex(values.length)}
+            className="text-blue-500 hover:text-blue-700 text-sm font-bold leading-none px-1"
+          >
+            +
+          </button>
+        )}
+        {editingIndex === values.length && values.length < max && (
+          <select
+            autoFocus
+            value=""
+            onChange={(e) => handleSelect(e.target.value, values.length)}
+            onBlur={() => setEditingIndex(null)}
+            className="text-xs py-0.5 px-1"
+          >
+            <option value="">Select...</option>
+            {options.filter((o) => !values.includes(o.value)).map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        )}
+      </div>
+    </div>
   );
 }
 

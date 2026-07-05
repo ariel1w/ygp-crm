@@ -5,7 +5,7 @@ import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { COMPANY_TYPES, TEAM_MEMBERS } from "@/lib/constants";
 import { getContactStatus, type ContactStatus } from "@/lib/status";
-import { InlineText, InlineTextArea, InlineDate, InlineSelect, InlineProjects } from "@/components/InlineEdit";
+import { InlineText, InlineTextArea, InlineDate, InlineSelect, InlineMultiSelect, InlineProjects } from "@/components/InlineEdit";
 import QuickLog from "@/components/QuickLog";
 
 interface Contact {
@@ -293,10 +293,11 @@ export default function ContactsPage() {
                     />
                   </td>
                   <td>
-                    <InlineSelect
+                    <InlineMultiSelect
                       value={c.lastContactBy || ""}
                       options={TEAM_MEMBERS.map((m) => ({ value: m, label: m }))}
                       placeholder="Who?"
+                      max={2}
                       onSave={(val) => patchContact(c.id, { lastContactBy: val })}
                     />
                   </td>
@@ -311,10 +312,11 @@ export default function ContactsPage() {
                         c.lastContactDate
                           ? formatDistanceToNow(new Date(c.lastContactDate), {
                               addSuffix: true,
-                            })
+                            }).replace(/^about /, "~")
                           : ""
                       }
                       placeholder="Set date"
+                      showNow
                       onSave={(val) =>
                         patchContact(c.id, { lastContactDate: val })
                       }
