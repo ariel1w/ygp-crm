@@ -168,12 +168,6 @@ export default function ContactDetailPage({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowQuickLog(true)}
-            className="btn btn-primary"
-          >
-            Log Interaction
-          </button>
-          <button
             onClick={() => setEditing(!editing)}
             className="btn btn-secondary"
           >
@@ -379,12 +373,12 @@ export default function ContactDetailPage({
       {/* Timeline */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Timeline</h3>
+          <h3 className="text-lg font-semibold">Notes</h3>
           <button
             onClick={() => setShowQuickLog(true)}
             className="btn btn-primary text-sm"
           >
-            + Log Interaction
+            + Note
           </button>
         </div>
 
@@ -418,7 +412,7 @@ export default function ContactDetailPage({
           </div>
         ) : (
           <p className="text-sm text-muted py-4 text-center">
-            No interactions logged yet. Click &ldquo;Log Interaction&rdquo; to add the first one.
+            No notes yet. Click &ldquo;+ Note&rdquo; to add the first one.
           </p>
         )}
       </div>

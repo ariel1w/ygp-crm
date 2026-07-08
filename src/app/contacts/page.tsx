@@ -252,7 +252,6 @@ export default function ContactsPage() {
               <SortTh col="lastAction" label="Last Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextAction" label="Next Action" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               <SortTh col="nextContactDate" label="Follow-Up Date" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
-              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -353,14 +352,6 @@ export default function ContactsPage() {
                         patchContact(c.id, { nextActionDate: val })
                       }
                     />
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => setQuickLogContact(c)}
-                      className="btn btn-secondary text-xs py-1 px-2 whitespace-nowrap"
-                    >
-                      Log
-                    </button>
                   </td>
                 </tr>
               );
