@@ -34,6 +34,9 @@ export function getContactStatus(contact: {
   nextAction: string | null;
   lastInteraction: string | null;
 }): StatusInfo {
+  // Use Israel timezone for date comparisons
+  const nowInIsrael = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+  const todayInIsrael = new Date(nowInIsrael.getFullYear(), nowInIsrael.getMonth(), nowInIsrael.getDate());
   const now = new Date();
   const lastContact = contact.lastContactDate ? new Date(contact.lastContactDate) : null;
   const nextDate = contact.nextActionDate ? new Date(contact.nextActionDate) : null;
@@ -41,7 +44,7 @@ export function getContactStatus(contact: {
 
   let status: ContactStatus;
 
-  if (nextDate && nextDate < now) {
+  if (nextDate && nextDate < todayInIsrael) {
     status = "overdue";
   } else if (nextDate && differenceInDays(nextDate, now) <= 7) {
     status = "due-soon";
