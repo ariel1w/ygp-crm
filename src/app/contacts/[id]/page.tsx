@@ -404,6 +404,16 @@ export default function ContactDetailPage({
                       {" "}
                       ({formatDistanceToNow(new Date(note.date), { addSuffix: true })})
                     </span>
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to delete this note?")) return;
+                        await fetch(`/api/notes/${note.id}`, { method: "DELETE" });
+                        loadContact();
+                      }}
+                      className="text-xs text-muted hover:text-red-500 ml-auto"
+                    >
+                      ✕
+                    </button>
                   </div>
                   <p className="text-sm">{note.content}</p>
                 </div>
