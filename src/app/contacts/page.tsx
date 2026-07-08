@@ -297,7 +297,7 @@ export default function ContactsPage() {
                       value={c.lastContactBy || ""}
                       options={TEAM_MEMBERS.map((m) => ({ value: m, label: m }))}
                       placeholder="Who?"
-                      max={2}
+                      max={Infinity}
                       onSave={(val) => patchContact(c.id, { lastContactBy: val })}
                     />
                   </td>
