@@ -6,7 +6,7 @@ export const STAGES = [
   { key: "library", label: "Library", labelHe: "ספריה" },
 ] as const;
 
-export const GENRES = ["דרמה", "קומדיה", "דרמה קומית", "פשע", "דוקו-ריאליטי"];
+export const GENRES = ["דרמה", "קומדיה", "דרמה קומית", "פשע", "דוקו-ריאליטי", "טלנובלה"];
 
 export const FORMATS = [
   "סיטקום", "דרמה", "קומדיה", "סרט דרמה", "סרט", "דוקו-ריאליטי",
