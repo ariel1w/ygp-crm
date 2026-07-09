@@ -138,7 +138,7 @@ export default function SlatePage() {
                         }))}
                         placeholder="—"
                         separator=" או "
-                        max={3}
+                        max={Infinity}
                         onSave={(val) =>
                           patchProject(p.id, { [col.key]: val })
                         }
