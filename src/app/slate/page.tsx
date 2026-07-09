@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { STAGES, STAGE_COLUMNS } from "@/lib/slate-constants";
-import { InlineText, InlineSelect } from "@/components/InlineEdit";
+import { InlineText, InlineSelect, InlineMultiSelect } from "@/components/InlineEdit";
 
 interface SlateProject {
   id: string;
@@ -129,7 +129,21 @@ export default function SlatePage() {
               <tr key={p.id}>
                 {columns.map((col) => (
                   <td key={col.key}>
-                    {col.type === "select" && col.options ? (
+                    {col.type === "multiselect" && col.options ? (
+                      <InlineMultiSelect
+                        value={(p[col.key] as string) || ""}
+                        options={col.options.map((o) => ({
+                          value: o,
+                          label: o,
+                        }))}
+                        placeholder="—"
+                        separator=" או "
+                        max={3}
+                        onSave={(val) =>
+                          patchProject(p.id, { [col.key]: val })
+                        }
+                      />
+                    ) : col.type === "select" && col.options ? (
                       <InlineSelect
                         value={(p[col.key] as string) || ""}
                         options={col.options.map((o) => ({

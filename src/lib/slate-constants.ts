@@ -24,7 +24,7 @@ export const PRODUCTION_STATUSES = ["פרה- פרודקשן", "בצילומים"
 export const LOCATIONS = ["ישראל", "הונגריה"];
 
 // Columns per stage
-export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "text" | "select"; options?: string[] }[]> = {
+export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "text" | "select" | "multiselect"; options?: string[] }[]> = {
   development: [
     { key: "name", label: "Project", type: "text" },
     { key: "creator", label: "Creator", type: "text" },
@@ -32,14 +32,14 @@ export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "
     { key: "episodeLength", label: "Ep. Length", type: "text" },
     { key: "genre", label: "Genre", type: "select", options: GENRES },
     { key: "keyPeople", label: "Key People", type: "text" },
-    { key: "broadcaster", label: "Broadcaster", type: "select", options: BROADCASTERS },
+    { key: "broadcaster", label: "Broadcaster", type: "multiselect", options: BROADCASTERS },
     { key: "status", label: "Status", type: "text" },
   ],
   production: [
     { key: "name", label: "Project", type: "text" },
     { key: "creator", label: "Creator", type: "text" },
     { key: "format", label: "Format", type: "select", options: FORMATS },
-    { key: "broadcaster", label: "Broadcaster", type: "select", options: BROADCASTERS },
+    { key: "broadcaster", label: "Broadcaster", type: "multiselect", options: BROADCASTERS },
     { key: "shootingDates", label: "Shooting Dates", type: "text" },
     { key: "locations", label: "Locations", type: "select", options: LOCATIONS },
     { key: "status", label: "Status", type: "select", options: PRODUCTION_STATUSES },
@@ -48,7 +48,7 @@ export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "
   ],
   sales: [
     { key: "name", label: "Project", type: "text" },
-    { key: "broadcaster", label: "Broadcaster", type: "select", options: BROADCASTERS },
+    { key: "broadcaster", label: "Broadcaster", type: "multiselect", options: BROADCASTERS },
     { key: "contact", label: "Contact", type: "text" },
     { key: "status", label: "Status", type: "text" },
     { key: "whereAired", label: "Where Aired", type: "text" },
@@ -60,7 +60,7 @@ export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "
     { key: "name", label: "Project", type: "text" },
     { key: "creator", label: "Creator", type: "text" },
     { key: "format", label: "Format", type: "select", options: FORMATS },
-    { key: "broadcaster", label: "Broadcaster", type: "select", options: BROADCASTERS },
+    { key: "broadcaster", label: "Broadcaster", type: "multiselect", options: BROADCASTERS },
     { key: "shootingDates", label: "Shooting Dates", type: "text" },
     { key: "locations", label: "Locations", type: "select", options: LOCATIONS },
     { key: "status", label: "Status", type: "select", options: PRODUCTION_STATUSES },
@@ -70,7 +70,7 @@ export const STAGE_COLUMNS: Record<string, { key: string; label: string; type: "
   library: [
     { key: "name", label: "Project", type: "text" },
     { key: "creator", label: "Creators", type: "text" },
-    { key: "broadcaster", label: "Broadcaster", type: "select", options: BROADCASTERS },
+    { key: "broadcaster", label: "Broadcaster", type: "multiselect", options: BROADCASTERS },
     { key: "status", label: "Status", type: "text" },
     { key: "whereAired", label: "Where Aired", type: "text" },
     { key: "distributor", label: "Distributor", type: "text" },

@@ -251,14 +251,16 @@ export function InlineMultiSelect({
   placeholder,
   onSave,
   max = 2,
+  separator = ", ",
 }: {
   value: string;
   options: { value: string; label: string }[];
   placeholder?: string;
   onSave: (val: string) => void;
   max?: number;
+  separator?: string;
 }) {
-  const values = value ? value.split(", ").filter(Boolean) : [];
+  const values = value ? value.split(separator).filter(Boolean) : [];
   const [open, setOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -286,14 +288,14 @@ export function InlineMultiSelect({
     } else {
       if (selected) next.push(selected);
     }
-    onSave(next.join(", "));
+    onSave(next.join(separator));
     setEditingIndex(null);
     setOpen(next.length === 0 ? false : true);
   };
 
   const handleRemove = (index: number) => {
     const next = values.filter((_, i) => i !== index);
-    onSave(next.join(", "));
+    onSave(next.join(separator));
     if (next.length === 0) setOpen(false);
   };
 
@@ -304,7 +306,7 @@ export function InlineMultiSelect({
         className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
       >
         {values.length > 0 ? (
-          values.join(", ")
+          values.join(separator)
         ) : (
           <span className="text-muted italic">{placeholder || "—"}</span>
         )}
