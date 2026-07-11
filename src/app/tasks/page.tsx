@@ -165,7 +165,7 @@ export default function TasksPage() {
       </div>
 
       {/* Main tabs: Tasks vs For Yoav */}
-      <div className="flex items-center gap-1 mb-4 bg-white/90 backdrop-blur rounded-xl p-2">
+      <div className="flex items-center gap-1 mb-2 bg-white/90 backdrop-blur rounded-xl p-1.5">
         <button
           onClick={() => setMainTab("tasks")}
           className={`px-4 py-1.5 text-sm font-bold rounded-full transition-colors ${
@@ -191,7 +191,7 @@ export default function TasksPage() {
       {mainTab === "tasks" && (
       <>
       {/* Controls */}
-      <div className="flex items-center gap-1 mb-4 bg-white/90 backdrop-blur rounded-xl p-2 flex-wrap">
+      <div className="flex items-center gap-1 mb-2 bg-white/90 backdrop-blur rounded-xl p-1.5 flex-wrap">
         <button
           onClick={() => setView("active")}
           className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-colors ${
@@ -224,7 +224,7 @@ export default function TasksPage() {
 
       {/* Add task */}
       {view === "active" && (
-        <div className="card p-3 mb-4 flex items-center gap-2 flex-wrap">
+        <div className="card p-2 mb-2 flex items-center gap-2 flex-wrap">
           <input
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
@@ -270,12 +270,14 @@ export default function TasksPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="card p-0 overflow-hidden">
             {grouped.map((g) => (
-              <div key={g.key} className="card p-0 overflow-hidden">
-                <div className="px-3 py-2 bg-gray-50 border-b border-border flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-foreground">{g.label}</h2>
-                  <span className="text-xs text-muted">{g.items.length}</span>
+              <div key={g.key}>
+                <div className="px-2.5 py-1 bg-gray-100 border-b border-border flex items-center justify-between sticky top-14 z-10">
+                  <h2 className="text-xs font-bold text-foreground uppercase tracking-wide">
+                    {g.label}
+                  </h2>
+                  <span className="text-[10px] text-muted">{g.items.length}</span>
                 </div>
                 {g.items.map((t) => (
                   <TaskRow
@@ -288,7 +290,7 @@ export default function TasksPage() {
               </div>
             ))}
             {grouped.length === 0 && (
-              <div className="card text-center text-muted py-8 text-sm">
+              <div className="text-center text-muted py-8 text-sm">
                 No open tasks. 🎉
               </div>
             )}
@@ -301,7 +303,7 @@ export default function TasksPage() {
           {archived.map((t) => (
             <div
               key={t.id}
-              className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0"
+              className="flex items-center gap-1.5 px-2.5 py-1 border-b border-border/60 last:border-b-0"
             >
               <span className="text-success text-sm">✓</span>
               <span dir="auto" className="flex-1 text-sm text-muted line-through">
@@ -344,7 +346,7 @@ export default function TasksPage() {
           </p>
 
           {/* Add item */}
-          <div className="card p-3 mb-4 flex items-center gap-2 flex-wrap">
+          <div className="card p-2 mb-2 flex items-center gap-2 flex-wrap">
             <input
               value={newYoav}
               onChange={(e) => setNewYoav(e.target.value)}
@@ -363,12 +365,12 @@ export default function TasksPage() {
             {yoavActive.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 hover:bg-gray-50/60"
+                className="flex items-center gap-1.5 px-2.5 py-1 border-b border-border/60 last:border-b-0 hover:bg-gray-50/60"
               >
                 <button
                   onClick={() => patchTask(t.id, { done: true })}
                   title="Mark as covered"
-                  className="w-5 h-5 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
+                  className="w-4 h-4 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0" dir="auto">
                   <InlineText
@@ -403,7 +405,7 @@ export default function TasksPage() {
               {yoavCovered.map((t) => (
                 <div
                   key={t.id}
-                  className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0"
+                  className="flex items-center gap-1.5 px-2.5 py-1 border-b border-border/60 last:border-b-0"
                 >
                   <span className="text-success text-sm">✓</span>
                   <span dir="auto" className="flex-1 text-sm text-muted line-through">
@@ -445,20 +447,20 @@ function TaskRow({
   const d = daysWaiting(task.addedAt);
   const urgent = d >= 14;
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 hover:bg-gray-50/60">
+    <div className="flex items-center gap-1.5 px-2.5 py-0.5 border-b border-border/60 last:border-b-0 hover:bg-gray-50/60">
       {/* Done */}
       <button
         onClick={() => {
           if (confirm("Mark this task as done?")) onPatch(task.id, { done: true });
         }}
         title="Mark done"
-        className="w-5 h-5 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
+        className="w-4 h-4 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
       />
       {/* Important */}
       <button
         onClick={() => onPatch(task.id, { important: !task.important })}
         title={task.important ? "Important" : "Mark important"}
-        className={`text-lg leading-none flex-shrink-0 ${
+        className={`text-base leading-none flex-shrink-0 ${
           task.important ? "text-yellow-500" : "text-gray-300 hover:text-yellow-400"
         }`}
       >
@@ -478,7 +480,7 @@ function TaskRow({
       )}
       {/* Age */}
       <span
-        className={`text-xs whitespace-nowrap ${
+        className={`text-[11px] whitespace-nowrap ${
           urgent ? "text-danger font-semibold" : "text-muted"
         }`}
         title={`Added ${formatDate(task.addedAt)}`}
