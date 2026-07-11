@@ -297,7 +297,9 @@ function TaskRow({
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 hover:bg-gray-50/60">
       {/* Done */}
       <button
-        onClick={() => onPatch(task.id, { done: true })}
+        onClick={() => {
+          if (confirm("Mark this task as done?")) onPatch(task.id, { done: true });
+        }}
         title="Mark done"
         className="w-5 h-5 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
       />
