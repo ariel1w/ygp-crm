@@ -29,7 +29,9 @@ export async function proxy(request: NextRequest) {
     pathname === "/api/tasks" ||
     pathname.startsWith("/api/tasks/") ||
     pathname === "/api/ideas" ||
-    pathname.startsWith("/api/ideas/");
+    pathname.startsWith("/api/ideas/") ||
+    pathname === "/api/suggestions" ||
+    pathname.startsWith("/api/suggestions/");
   if (isArielArea && session.user?.email?.toLowerCase() !== ARIEL_EMAIL) {
     // API → 403 JSON; page → bounce to the CRM.
     if (pathname.startsWith("/api/")) {

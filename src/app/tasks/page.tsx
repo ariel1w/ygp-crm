@@ -22,6 +22,13 @@ interface Task {
   source: string;
 }
 
+interface Suggestion {
+  id: string;
+  title: string;
+  startAt: string | null;
+  category: string;
+}
+
 type Mode = "category" | "topic" | "oldest";
 
 function daysWaiting(addedAt: string): number {
@@ -76,6 +83,7 @@ function TopicChip({
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [mainTab, setMainTab] = useState<"tasks" | "yoav">("tasks");
   const [view, setView] = useState<"active" | "archive">("active");
@@ -90,10 +98,32 @@ export default function TasksPage() {
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setTasks(data))
       .finally(() => setLoading(false));
+    fetch("/api/suggestions")
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setSuggestions(data));
   }, []);
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const addSuggestion = async (id: string) => {
+    const res = await fetch(`/api/suggestions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "add" }),
+    });
+    const data = await res.json();
+    if (data.task) setTasks((prev) => [data.task, ...prev]);
+    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+  };
+  const dismissSuggestion = async (id: string) => {
+    await fetch(`/api/suggestions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "dismiss" }),
+    });
+    setSuggestions((prev) => prev.filter((s) => s.id !== id));
+  };
 
   const patchTask = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
@@ -286,6 +316,13 @@ export default function TasksPage() {
       {mainTab === "tasks" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
           <div className="min-w-0">
+          {view === "active" && suggestions.length > 0 && (
+            <SuggestionInbox
+              items={suggestions}
+              onAdd={addSuggestion}
+              onDismiss={dismissSuggestion}
+            />
+          )}
           {/* Controls */}
           <div className="flex items-center gap-2 mb-2 bg-white/90 backdrop-blur rounded-xl p-1.5 shadow-sm flex-wrap">
             <button
@@ -334,30 +371,34 @@ export default function TasksPage() {
             </div>
           )}
 
-          {/* Add task */}
+          {/* Add task — single line */}
           {view === "active" && (
-            <div className="card p-2 mb-2 flex items-center gap-2 flex-wrap">
+            <div className="card p-1.5 mb-2 flex items-center gap-1.5 flex-nowrap">
               <input
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                 placeholder="Add a task…"
                 dir="auto"
-                className="flex-1 min-w-[200px] text-sm py-1.5 px-2 border border-border rounded-lg"
+                className="flex-1 min-w-0 text-sm py-1 px-2 border border-border rounded-lg"
               />
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="text-sm py-1.5 px-2 border border-border rounded-lg"
+                title="Category"
+                className="text-sm py-1 px-1 border border-border rounded-lg flex-shrink-0 w-14"
               >
                 {TASK_CATEGORIES.map((c) => (
                   <option key={c.key} value={c.key}>
-                    {c.icon} {c.label}
+                    {c.icon}
                   </option>
                 ))}
               </select>
-              <button onClick={addTask} className="btn btn-primary">
-                + Add
+              <button
+                onClick={addTask}
+                className="btn btn-primary flex-shrink-0 px-3"
+              >
+                +
               </button>
             </div>
           )}
@@ -617,6 +658,66 @@ function SectionHeader({
 function EmptyRow() {
   return (
     <div className="text-center text-muted py-8 text-sm">No open tasks. 🎉</div>
+  );
+}
+
+function SuggestionInbox({
+  items,
+  onAdd,
+  onDismiss,
+}: {
+  items: Suggestion[];
+  onAdd: (id: string) => void;
+  onDismiss: (id: string) => void;
+}) {
+  return (
+    <div
+      className="rounded-xl overflow-hidden mb-2 border-2 shadow-sm bg-white"
+      style={{ borderColor: "#0ea5e9" }}
+    >
+      <div
+        className="flex items-center gap-2 px-2.5 py-1.5"
+        style={{ background: "#0ea5e914" }}
+      >
+        <span className="text-sm leading-none">📥</span>
+        <h2 className="text-xs font-bold" style={{ color: "#0284c7" }}>
+          Suggested from calendar
+        </h2>
+        <span className="text-[10px] text-muted ml-auto">{items.length}</span>
+      </div>
+      {items.map((s) => (
+        <div
+          key={s.id}
+          className="flex items-center gap-2 px-2.5 py-1 border-b border-border/50 last:border-b-0"
+        >
+          <span
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{ background: categoryColor(s.category) }}
+            title={s.category}
+          />
+          <span dir="auto" className="flex-1 min-w-0 text-sm font-medium truncate">
+            {s.title}
+          </span>
+          <span className="text-[10px] text-muted whitespace-nowrap flex-shrink-0">
+            {formatDate(s.startAt)}
+          </span>
+          <button
+            onClick={() => onAdd(s.id)}
+            title="Add to my list"
+            className="text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+          >
+            ✓
+          </button>
+          <button
+            onClick={() => onDismiss(s.id)}
+            title="Dismiss"
+            className="text-xs text-muted hover:text-danger rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }
 

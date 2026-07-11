@@ -100,6 +100,17 @@ model Task {
   updatedAt   DateTime  @updatedAt
 }
 
+model Suggestion {
+  id        String    @id @default(cuid())
+  eventId   String    @unique
+  title     String
+  startAt   DateTime?
+  category  String    @default("admin")
+  status    String    @default("pending") // pending, added, dismissed
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 model Idea {
   id           String   @id @default(cuid())
   title        String
