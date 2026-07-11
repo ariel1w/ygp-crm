@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       content: body.content ?? "",
       list: body.list === "yoav" ? "yoav" : "tasks",
       category: body.category ?? "admin",
+      tags: typeof body.tags === "string" ? body.tags : "",
       important: Boolean(body.important),
       source: body.source ?? "manual",
     },

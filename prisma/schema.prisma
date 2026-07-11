@@ -90,6 +90,7 @@ model Task {
   content     String
   list        String    @default("tasks") // tasks, yoav
   category    String    @default("admin") // clients, projects, contacts, events, ideas, admin
+  tags        String    @default("") // comma-separated cross-cutting topics, e.g. "אות קין, שני"
   important   Boolean   @default(false)
   done        Boolean   @default(false)
   addedAt     DateTime  @default(now())

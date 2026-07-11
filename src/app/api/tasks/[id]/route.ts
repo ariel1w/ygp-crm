@@ -22,6 +22,7 @@ export async function PATCH(
   const data: Record<string, unknown> = {};
   if ("content" in body) data.content = body.content || "";
   if ("category" in body) data.category = body.category || "admin";
+  if ("tags" in body) data.tags = typeof body.tags === "string" ? body.tags : "";
   if ("important" in body) data.important = Boolean(body.important);
   if ("done" in body) {
     data.done = Boolean(body.done);
