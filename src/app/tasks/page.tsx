@@ -395,31 +395,32 @@ export default function TasksPage() {
           {/* Add task — single line */}
           {view === "active" && (
             <div className="card p-1.5 mb-2 flex items-center gap-1.5 flex-nowrap">
+              <span className="text-lg text-muted flex-shrink-0 ps-1">＋</span>
               <input
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addTask()}
                 placeholder="Add a task…"
                 dir="auto"
-                className="flex-1 min-w-0 text-sm py-1 px-2 border border-border rounded-lg"
+                className="flex-1 min-w-0 text-sm py-1.5 px-2 border border-border rounded-lg"
               />
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                title="Category"
-                className="text-sm py-1 px-1 border border-border rounded-lg flex-shrink-0 w-14"
+                title="Section"
+                className="text-xs py-1.5 px-1 border border-border rounded-lg flex-shrink-0 max-w-[120px]"
               >
                 {TASK_CATEGORIES.map((c) => (
                   <option key={c.key} value={c.key}>
-                    {c.icon}
+                    {c.icon} {c.label.split(" / ")[1] ?? c.label}
                   </option>
                 ))}
               </select>
               <button
                 onClick={addTask}
-                className="btn btn-primary flex-shrink-0 px-3"
+                className="btn btn-primary flex-shrink-0 whitespace-nowrap px-3"
               >
-                +
+                + Add
               </button>
             </div>
           )}
