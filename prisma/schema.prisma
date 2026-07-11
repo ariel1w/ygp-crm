@@ -88,6 +88,7 @@ model SlateProject {
 model Task {
   id          String    @id @default(cuid())
   content     String
+  list        String    @default("tasks") // tasks, yoav
   category    String    @default("admin") // clients, projects, contacts, events, ideas, admin
   important   Boolean   @default(false)
   done        Boolean   @default(false)

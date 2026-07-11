@@ -7,6 +7,7 @@ import { TASK_CATEGORIES, categoryLabel } from "@/lib/task-constants";
 interface Task {
   id: string;
   content: string;
+  list: string;
   category: string;
   important: boolean;
   done: boolean;
@@ -36,10 +37,12 @@ function formatDate(iso: string | null): string {
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mainTab, setMainTab] = useState<"tasks" | "yoav">("tasks");
   const [view, setView] = useState<"active" | "archive">("active");
   const [flat, setFlat] = useState(false); // false = grouped, true = oldest-waiting flat list
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("admin");
+  const [newYoav, setNewYoav] = useState("");
 
   const loadData = useCallback(() => {
     fetch("/api/tasks")
@@ -84,8 +87,30 @@ export default function TasksPage() {
     setNewContent("");
   };
 
-  const active = useMemo(() => tasks.filter((t) => !t.done), [tasks]);
-  const archived = useMemo(() => tasks.filter((t) => t.done), [tasks]);
+  const addYoav = async () => {
+    const content = newYoav.trim();
+    if (!content) return;
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, list: "yoav" }),
+    });
+    const created = await res.json();
+    setTasks((prev) => [created, ...prev]);
+    setNewYoav("");
+  };
+
+  // "Tasks" tab shows the main list; "For Yoav" shows the Sunday-meeting list.
+  const taskItems = useMemo(
+    () => tasks.filter((t) => (t.list ?? "tasks") === "tasks"),
+    [tasks]
+  );
+  const yoavAll = useMemo(() => tasks.filter((t) => t.list === "yoav"), [tasks]);
+  const yoavActive = useMemo(() => yoavAll.filter((t) => !t.done), [yoavAll]);
+  const yoavCovered = useMemo(() => yoavAll.filter((t) => t.done), [yoavAll]);
+
+  const active = useMemo(() => taskItems.filter((t) => !t.done), [taskItems]);
+  const archived = useMemo(() => taskItems.filter((t) => t.done), [taskItems]);
 
   // important first, then oldest waiting first
   const byImportantThenAge = (a: Task, b: Task) => {
@@ -119,20 +144,52 @@ export default function TasksPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 className="text-xl font-bold text-white drop-shadow">
-          Ariel — My Tasks
-        </h1>
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h1 className="text-xl font-bold text-white drop-shadow">Ariel</h1>
         <div className="flex items-center gap-2 text-xs">
-          <span className="bg-white/90 rounded-full px-3 py-1 font-semibold text-foreground">
-            {active.length} open
-          </span>
-          <span className="bg-white/90 rounded-full px-3 py-1 font-semibold text-foreground">
-            ⭐ {importantCount} important
-          </span>
+          {mainTab === "tasks" ? (
+            <>
+              <span className="bg-white/90 rounded-full px-3 py-1 font-semibold text-foreground">
+                {active.length} open
+              </span>
+              <span className="bg-white/90 rounded-full px-3 py-1 font-semibold text-foreground">
+                ⭐ {importantCount} important
+              </span>
+            </>
+          ) : (
+            <span className="bg-white/90 rounded-full px-3 py-1 font-semibold text-foreground">
+              {yoavActive.length} for Sunday
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Main tabs: Tasks vs For Yoav */}
+      <div className="flex items-center gap-1 mb-4 bg-white/90 backdrop-blur rounded-xl p-2">
+        <button
+          onClick={() => setMainTab("tasks")}
+          className={`px-4 py-1.5 text-sm font-bold rounded-full transition-colors ${
+            mainTab === "tasks"
+              ? "bg-foreground text-white"
+              : "text-muted hover:text-foreground hover:bg-gray-100"
+          }`}
+        >
+          Tasks
+        </button>
+        <button
+          onClick={() => setMainTab("yoav")}
+          className={`px-4 py-1.5 text-sm font-bold rounded-full transition-colors ${
+            mainTab === "yoav"
+              ? "bg-foreground text-white"
+              : "text-muted hover:text-foreground hover:bg-gray-100"
+          }`}
+        >
+          For Yoav (Sunday)
+        </button>
+      </div>
+
+      {mainTab === "tasks" && (
+      <>
       {/* Controls */}
       <div className="flex items-center gap-1 mb-4 bg-white/90 backdrop-blur rounded-xl p-2 flex-wrap">
         <button
@@ -275,6 +332,100 @@ export default function TasksPage() {
             </div>
           )}
         </div>
+      )}
+      </>
+      )}
+
+      {/* For Yoav (Sunday meeting) */}
+      {mainTab === "yoav" && (
+        <>
+          <p className="text-xs text-white/80 drop-shadow mb-3">
+            Things to raise with Yoav at the Sunday שוטף meeting. Check each off as you cover it.
+          </p>
+
+          {/* Add item */}
+          <div className="card p-3 mb-4 flex items-center gap-2 flex-wrap">
+            <input
+              value={newYoav}
+              onChange={(e) => setNewYoav(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addYoav()}
+              placeholder="Add something to discuss…"
+              dir="auto"
+              className="flex-1 min-w-[200px] text-sm py-1.5 px-2 border border-border rounded"
+            />
+            <button onClick={addYoav} className="btn btn-primary">
+              + Add
+            </button>
+          </div>
+
+          {/* Active list */}
+          <div className="card p-0 overflow-hidden mb-4">
+            {yoavActive.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 hover:bg-gray-50/60"
+              >
+                <button
+                  onClick={() => patchTask(t.id, { done: true })}
+                  title="Mark as covered"
+                  className="w-5 h-5 rounded-full border-2 border-border hover:border-success hover:bg-success/10 flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0" dir="auto">
+                  <InlineText
+                    value={t.content}
+                    onSave={(val) => patchTask(t.id, { content: val })}
+                  />
+                </div>
+                <button
+                  onClick={() => deleteTask(t.id)}
+                  className="text-muted hover:text-danger text-xs flex-shrink-0"
+                  title="Delete"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            {yoavActive.length === 0 && (
+              <div className="text-center text-muted py-8 text-sm">
+                Nothing to discuss right now. 🎉
+              </div>
+            )}
+          </div>
+
+          {/* Covered */}
+          {yoavCovered.length > 0 && (
+            <div className="card p-0 overflow-hidden">
+              <div className="px-3 py-2 bg-gray-50 border-b border-border">
+                <h2 className="text-sm font-bold text-muted">
+                  Covered ({yoavCovered.length})
+                </h2>
+              </div>
+              {yoavCovered.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0"
+                >
+                  <span className="text-success text-sm">✓</span>
+                  <span dir="auto" className="flex-1 text-sm text-muted line-through">
+                    {t.content}
+                  </span>
+                  <button
+                    onClick={() => patchTask(t.id, { done: false })}
+                    className="text-xs text-primary hover:underline whitespace-nowrap"
+                  >
+                    restore
+                  </button>
+                  <button
+                    onClick={() => deleteTask(t.id)}
+                    className="text-muted hover:text-danger text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

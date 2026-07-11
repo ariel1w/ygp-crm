@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
   const task = await prisma.task.create({
     data: {
       content: body.content ?? "",
+      list: body.list === "yoav" ? "yoav" : "tasks",
       category: body.category ?? "admin",
       important: Boolean(body.important),
       source: body.source ?? "manual",
