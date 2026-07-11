@@ -832,6 +832,18 @@ function TaskRow({
         ))}
       </div>
 
+      <select
+        value={task.category}
+        onChange={(e) => onPatch(task.id, { category: e.target.value })}
+        title="Move to section"
+        className="mt-0.5 text-[11px] border border-border rounded px-0.5 py-0 opacity-0 group-hover:opacity-100 transition flex-shrink-0 bg-white"
+      >
+        {TASK_CATEGORIES.map((c) => (
+          <option key={c.key} value={c.key}>
+            {c.icon} {c.label.split(" / ")[1] ?? c.label}
+          </option>
+        ))}
+      </select>
       <button
         onClick={() => onEditTags(task)}
         title="Edit topics"
