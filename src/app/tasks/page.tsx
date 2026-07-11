@@ -333,7 +333,7 @@ export default function TasksPage() {
       </div>
 
       {mainTab === "tasks" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-3 items-start">
           <div className="min-w-0">
           {view === "active" && suggestions.length > 0 && (
             <SuggestionInbox
@@ -852,7 +852,7 @@ function TaskRow({
         value={task.category}
         onChange={(e) => onPatch(task.id, { category: e.target.value })}
         title="Move to section"
-        className="mt-0.5 text-[11px] border border-border rounded px-0.5 py-0 opacity-0 group-hover:opacity-100 transition flex-shrink-0 bg-white"
+        className="mt-0.5 text-[11px] border border-border rounded px-0.5 py-0 hidden group-hover:inline-block flex-shrink-0 bg-white"
       >
         {TASK_CATEGORIES.map((c) => (
           <option key={c.key} value={c.key}>
@@ -863,7 +863,7 @@ function TaskRow({
       <button
         onClick={() => onEditTags(task)}
         title="Edit topics"
-        className="mt-0.5 text-xs text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+        className="mt-0.5 text-xs text-muted hover:text-primary hidden group-hover:inline-block flex-shrink-0"
       >
         🏷
       </button>
@@ -877,7 +877,7 @@ function TaskRow({
       </span>
       <button
         onClick={() => onDelete(task.id)}
-        className="mt-0.5 text-muted hover:text-danger text-xs flex-shrink-0 opacity-0 group-hover:opacity-100 transition"
+        className="mt-0.5 text-muted hover:text-danger text-xs flex-shrink-0 hidden group-hover:inline-block"
         title="Delete"
       >
         ✕
