@@ -829,23 +829,29 @@ function TaskRow({
         {task.important ? "★" : "☆"}
       </button>
 
-      <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-        {showCategory && (
-          <span
-            title={task.category}
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ background: categoryColor(task.category) }}
-          />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          {showCategory && (
+            <span
+              title={task.category}
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ background: categoryColor(task.category) }}
+            />
+          )}
+          <span className="flex-1 min-w-0 text-sm font-medium" dir="auto">
+            <InlineText
+              value={task.content}
+              onSave={(val) => onPatch(task.id, { content: val })}
+            />
+          </span>
+        </div>
+        {tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1 mt-0.5 ps-3.5">
+            {tags.map((tag) => (
+              <TopicChip key={tag} tag={tag} onClick={() => onTagClick(tag)} />
+            ))}
+          </div>
         )}
-        <span className="text-sm font-medium min-w-0" dir="auto">
-          <InlineText
-            value={task.content}
-            onSave={(val) => onPatch(task.id, { content: val })}
-          />
-        </span>
-        {tags.map((tag) => (
-          <TopicChip key={tag} tag={tag} onClick={() => onTagClick(tag)} />
-        ))}
       </div>
 
       <select
