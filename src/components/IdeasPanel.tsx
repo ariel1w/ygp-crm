@@ -33,7 +33,22 @@ export default function IdeasPanel() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+
+  useEffect(() => {
+    try {
+      setPanelCollapsed(localStorage.getItem("ariel-ideas-collapsed") === "1");
+    } catch {}
+  }, []);
+  const togglePanel = () =>
+    setPanelCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ariel-ideas-collapsed", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
 
   const sortStale = (arr: Idea[]) =>
     [...arr].sort(
@@ -95,21 +110,30 @@ export default function IdeasPanel() {
   return (
     <div className="card p-0 overflow-hidden">
       {/* Header */}
-      <div
-        className="flex items-center gap-2 px-3 py-2 border-b border-border"
+      <button
+        onClick={togglePanel}
+        className="w-full flex items-center gap-2 px-3 py-2 border-b border-border text-left"
         style={{ background: "#a855f714", borderLeft: "3px solid #a855f7" }}
       >
+        <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#a855f7" }}>
+          {panelCollapsed ? "▸" : "▾"}
+        </span>
         <span className="text-base leading-none">💡</span>
         <div className="min-w-0">
           <h2 className="text-sm font-bold" style={{ color: "#a855f7" }}>
             רעיונות — To Develop
           </h2>
-          <p className="text-[11px] text-muted leading-tight">
-            Work on one whenever you have a moment. Stale ideas rise to the top.
-          </p>
+          {!panelCollapsed && (
+            <p className="text-[11px] text-muted leading-tight">
+              Work on one whenever you have a moment. Stale ideas rise to the top.
+            </p>
+          )}
         </div>
-      </div>
+        <span className="text-[10px] text-muted ml-auto">{active.length}</span>
+      </button>
 
+      {panelCollapsed ? null : (
+        <>
       {/* Add */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-gray-50">
         <input
@@ -195,6 +219,8 @@ export default function IdeasPanel() {
             </div>
           );
         })
+      )}
+        </>
       )}
     </div>
   );

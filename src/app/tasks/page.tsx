@@ -89,6 +89,7 @@ export default function TasksPage() {
   const [view, setView] = useState<"active" | "archive">("active");
   const [mode, setMode] = useState<Mode>("category");
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("admin");
   const [newYoav, setNewYoav] = useState("");
@@ -105,6 +106,24 @@ export default function TasksPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Remember which sections are collapsed, per browser.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("ariel-collapsed");
+      if (raw) setCollapsed(new Set(JSON.parse(raw)));
+    } catch {}
+  }, []);
+  const toggleCollapsed = (key: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      try {
+        localStorage.setItem("ariel-collapsed", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
 
   const addSuggestion = async (id: string) => {
     const res = await fetch(`/api/suggestions/${id}`, {
@@ -321,6 +340,8 @@ export default function TasksPage() {
               items={suggestions}
               onAdd={addSuggestion}
               onDismiss={dismissSuggestion}
+              collapsed={collapsed.has("inbox")}
+              onToggle={() => toggleCollapsed("inbox")}
             />
           )}
           {/* Controls */}
@@ -423,26 +444,33 @@ export default function TasksPage() {
 
           {view === "active" && mode === "category" && (
             <div className="card p-0 overflow-hidden">
-              {grouped.map((g) => (
-                <div key={g.key}>
-                  <SectionHeader
-                    color={g.color}
-                    icon={g.icon}
-                    label={g.label}
-                    count={g.items.length}
-                  />
-                  {g.items.map((t) => (
-                    <TaskRow
-                      key={t.id}
-                      task={t}
-                      onPatch={patchTask}
-                      onDelete={deleteTask}
-                      onEditTags={editTags}
-                      onTagClick={setTopicFilter}
+              {grouped.map((g) => {
+                const key = `cat:${g.key}`;
+                const isCollapsed = collapsed.has(key);
+                return (
+                  <div key={g.key}>
+                    <SectionHeader
+                      color={g.color}
+                      icon={g.icon}
+                      label={g.label}
+                      count={g.items.length}
+                      collapsed={isCollapsed}
+                      onToggle={() => toggleCollapsed(key)}
                     />
-                  ))}
-                </div>
-              ))}
+                    {!isCollapsed &&
+                      g.items.map((t) => (
+                        <TaskRow
+                          key={t.id}
+                          task={t}
+                          onPatch={patchTask}
+                          onDelete={deleteTask}
+                          onEditTags={editTags}
+                          onTagClick={setTopicFilter}
+                        />
+                      ))}
+                  </div>
+                );
+              })}
               {grouped.length === 0 && <EmptyRow />}
             </div>
           )}
@@ -452,40 +480,46 @@ export default function TasksPage() {
               {topicGroups.map((g) => {
                 const isNone = g.tag === "__none";
                 const hue = isNone ? 0 : topicHue(g.tag);
+                const key = `topic:${g.tag}`;
+                const isCollapsed = collapsed.has(key);
+                const accent = isNone ? "#64748b" : `hsl(${hue} 65% 32%)`;
                 return (
                   <div key={g.tag}>
-                    <div
-                      className="flex items-center gap-2 px-2.5 py-1.5 border-y border-border"
+                    <button
+                      onClick={() => toggleCollapsed(key)}
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 border-y border-border text-left"
                       style={{
-                        background: isNone
-                          ? "#f1f5f9"
-                          : `hsl(${hue} 90% 96%)`,
+                        background: isNone ? "#f1f5f9" : `hsl(${hue} 90% 96%)`,
                         borderLeft: isNone
                           ? "3px solid #cbd5e1"
                           : `3px solid hsl(${hue} 70% 55%)`,
                       }}
                     >
                       <span
-                        className="text-xs font-bold"
-                        style={{ color: isNone ? "#64748b" : `hsl(${hue} 65% 32%)` }}
+                        className="text-[10px] w-3 flex-shrink-0"
+                        style={{ color: accent }}
                       >
+                        {isCollapsed ? "▸" : "▾"}
+                      </span>
+                      <span className="text-xs font-bold" style={{ color: accent }}>
                         {isNone ? "ללא נושא / No topic" : `# ${g.tag}`}
                       </span>
                       <span className="text-[10px] text-muted ml-auto">
                         {g.items.length}
                       </span>
-                    </div>
-                    {g.items.map((t) => (
-                      <TaskRow
-                        key={t.id + g.tag}
-                        task={t}
-                        onPatch={patchTask}
-                        onDelete={deleteTask}
-                        onEditTags={editTags}
-                        onTagClick={setTopicFilter}
-                        showCategory
-                      />
-                    ))}
+                    </button>
+                    {!isCollapsed &&
+                      g.items.map((t) => (
+                        <TaskRow
+                          key={t.id + g.tag}
+                          task={t}
+                          onPatch={patchTask}
+                          onDelete={deleteTask}
+                          onEditTags={editTags}
+                          onTagClick={setTopicFilter}
+                          showCategory
+                        />
+                      ))}
                   </div>
                 );
               })}
@@ -635,23 +669,31 @@ function SectionHeader({
   icon,
   label,
   count,
+  collapsed,
+  onToggle,
 }: {
   color: string;
   icon: string;
   label: string;
   count: number;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <div
-      className="flex items-center gap-2 px-2.5 py-1.5 border-y border-border"
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center gap-2 px-2.5 py-1.5 border-y border-border text-left"
       style={{ background: `${color}14`, borderLeft: `3px solid ${color}` }}
     >
+      <span className="text-[10px] w-3 flex-shrink-0" style={{ color }}>
+        {collapsed ? "▸" : "▾"}
+      </span>
       <span className="text-sm leading-none">{icon}</span>
       <h2 className="text-xs font-bold" style={{ color }}>
         {label}
       </h2>
       <span className="text-[10px] text-muted ml-auto">{count}</span>
-    </div>
+    </button>
   );
 }
 
@@ -665,27 +707,36 @@ function SuggestionInbox({
   items,
   onAdd,
   onDismiss,
+  collapsed,
+  onToggle,
 }: {
   items: Suggestion[];
   onAdd: (id: string) => void;
   onDismiss: (id: string) => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   return (
     <div
       className="rounded-xl overflow-hidden mb-2 border-2 shadow-sm bg-white"
       style={{ borderColor: "#0ea5e9" }}
     >
-      <div
-        className="flex items-center gap-2 px-2.5 py-1.5"
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left"
         style={{ background: "#0ea5e914" }}
       >
+        <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#0284c7" }}>
+          {collapsed ? "▸" : "▾"}
+        </span>
         <span className="text-sm leading-none">📥</span>
         <h2 className="text-xs font-bold" style={{ color: "#0284c7" }}>
           Suggested from calendar
         </h2>
         <span className="text-[10px] text-muted ml-auto">{items.length}</span>
-      </div>
-      {items.map((s) => (
+      </button>
+      {!collapsed &&
+        items.map((s) => (
         <div
           key={s.id}
           className="flex items-center gap-2 px-2.5 py-1 border-b border-border/50 last:border-b-0"
