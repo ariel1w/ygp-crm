@@ -85,6 +85,19 @@ model SlateProject {
   updatedAt      DateTime @updatedAt
 }
 
+model Task {
+  id          String    @id @default(cuid())
+  content     String
+  category    String    @default("admin") // clients, projects, contacts, events, ideas, admin
+  important   Boolean   @default(false)
+  done        Boolean   @default(false)
+  addedAt     DateTime  @default(now())
+  completedAt DateTime?
+  source      String    @default("manual") // manual, calendar
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Submission {
   id            String   @id @default(cuid())
   projectName   String

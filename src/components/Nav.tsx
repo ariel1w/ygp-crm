@@ -4,8 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-export default function Nav() {
+const ARIEL_EMAIL = "ariel1w@gmail.com";
+
+export default function Nav({ userEmail }: { userEmail?: string | null }) {
   const pathname = usePathname();
+  const isAriel = (userEmail ?? "").toLowerCase() === ARIEL_EMAIL;
   const isCRM =
     pathname === "/" ||
     pathname === "/contacts" ||
@@ -59,6 +62,18 @@ export default function Nav() {
               >
                 Central Project List
               </Link>
+              {isAriel && (
+                <Link
+                  href="/tasks"
+                  className={`px-3 py-1.5 text-sm font-bold rounded-full transition-colors ${
+                    pathname.startsWith("/tasks")
+                      ? "bg-foreground text-white"
+                      : "text-muted hover:text-primary"
+                  }`}
+                >
+                  Ariel
+                </Link>
+              )}
             </div>
             {isCRM && (
               <div className="flex items-center gap-1 border-l border-border pl-4">
