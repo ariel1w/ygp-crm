@@ -118,6 +118,12 @@ export default function IdeasPanel() {
         <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#a855f7" }}>
           {panelCollapsed ? "▸" : "▾"}
         </span>
+        <span
+          className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+          style={{ background: "#a855f722", color: "#a855f7" }}
+        >
+          {active.length}
+        </span>
         <span className="text-base leading-none">💡</span>
         <div className="min-w-0">
           <h2 className="text-sm font-bold" style={{ color: "#a855f7" }}>
@@ -129,7 +135,6 @@ export default function IdeasPanel() {
             </p>
           )}
         </div>
-        <span className="text-[10px] text-muted ml-auto">{active.length}</span>
       </button>
 
       {panelCollapsed ? null : (

@@ -501,11 +501,17 @@ export default function TasksPage() {
                       >
                         {isCollapsed ? "▸" : "▾"}
                       </span>
+                      <span
+                        className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+                        style={{
+                          background: isNone ? "#cbd5e133" : `hsl(${hue} 80% 88%)`,
+                          color: accent,
+                        }}
+                      >
+                        {g.items.length}
+                      </span>
                       <span className="text-xs font-bold" style={{ color: accent }}>
                         {isNone ? "ללא נושא / No topic" : `# ${g.tag}`}
-                      </span>
-                      <span className="text-[10px] text-muted ml-auto">
-                        {g.items.length}
                       </span>
                     </button>
                     {!isCollapsed &&
@@ -688,11 +694,16 @@ function SectionHeader({
       <span className="text-[10px] w-3 flex-shrink-0" style={{ color }}>
         {collapsed ? "▸" : "▾"}
       </span>
+      <span
+        className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+        style={{ background: `${color}22`, color }}
+      >
+        {count}
+      </span>
       <span className="text-sm leading-none">{icon}</span>
       <h2 className="text-xs font-bold" style={{ color }}>
         {label}
       </h2>
-      <span className="text-[10px] text-muted ml-auto">{count}</span>
     </button>
   );
 }
@@ -729,11 +740,16 @@ function SuggestionInbox({
         <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#0284c7" }}>
           {collapsed ? "▸" : "▾"}
         </span>
+        <span
+          className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+          style={{ background: "#0ea5e922", color: "#0284c7" }}
+        >
+          {items.length}
+        </span>
         <span className="text-sm leading-none">📥</span>
         <h2 className="text-xs font-bold" style={{ color: "#0284c7" }}>
           Suggested from calendar
         </h2>
-        <span className="text-[10px] text-muted ml-auto">{items.length}</span>
       </button>
       {!collapsed &&
         items.map((s) => (
