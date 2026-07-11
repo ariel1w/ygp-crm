@@ -273,10 +273,8 @@ export default function TasksPage() {
           <div className="card p-0 overflow-hidden">
             {grouped.map((g) => (
               <div key={g.key}>
-                <div className="px-2.5 py-1 bg-gray-100 border-b border-border flex items-center justify-between sticky top-14 z-10">
-                  <h2 className="text-xs font-bold text-foreground uppercase tracking-wide">
-                    {g.label}
-                  </h2>
+                <div className="px-2.5 py-1 bg-gray-100 border-y border-border flex items-center justify-between">
+                  <h2 className="text-xs font-bold text-foreground">{g.label}</h2>
                   <span className="text-[10px] text-muted">{g.items.length}</span>
                 </div>
                 {g.items.map((t) => (
