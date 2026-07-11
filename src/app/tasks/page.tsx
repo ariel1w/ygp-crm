@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { InlineText } from "@/components/InlineEdit";
+import IdeasPanel from "@/components/IdeasPanel";
 import {
   TASK_CATEGORIES,
   categoryColor,
@@ -283,7 +284,8 @@ export default function TasksPage() {
       </div>
 
       {mainTab === "tasks" && (
-        <>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+          <div className="min-w-0">
           {/* Controls */}
           <div className="flex items-center gap-2 mb-2 bg-white/90 backdrop-blur rounded-xl p-1.5 shadow-sm flex-wrap">
             <button
@@ -488,7 +490,12 @@ export default function TasksPage() {
               )}
             </div>
           )}
-        </>
+          </div>
+
+          <div className="min-w-0">
+            <IdeasPanel />
+          </div>
+        </div>
       )}
 
       {/* For Yoav */}

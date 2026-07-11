@@ -5,7 +5,6 @@ export const TASK_CATEGORIES = [
   { key: "projects", label: "Projects / פרוייקטים", color: "#10b981", icon: "📁" },
   { key: "contacts", label: "Contacts / אנשי קשר", color: "#0ea5e9", icon: "👤" },
   { key: "events", label: "Events / אירועים", color: "#f59e0b", icon: "📅" },
-  { key: "ideas", label: "Ideas / רעיונות", color: "#a855f7", icon: "💡" },
   { key: "admin", label: "Admin / כללי", color: "#64748b", icon: "🗂️" },
 ] as const;
 

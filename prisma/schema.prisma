@@ -100,6 +100,16 @@ model Task {
   updatedAt   DateTime  @updatedAt
 }
 
+model Idea {
+  id           String   @id @default(cuid())
+  title        String
+  notes        String   @default("")
+  lastWorkedAt DateTime @default(now())
+  archived     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Submission {
   id            String   @id @default(cuid())
   projectName   String
