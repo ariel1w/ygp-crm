@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { InlineText } from "@/components/InlineEdit";
 import IdeasPanel from "@/components/IdeasPanel";
 import {
@@ -855,25 +855,6 @@ function TaskRow({
         )}
       </div>
 
-      <select
-        value={task.category}
-        onChange={(e) => onPatch(task.id, { category: e.target.value })}
-        title="Move to section"
-        className="mt-0.5 text-[11px] border border-border rounded px-0.5 py-0 hidden group-hover:inline-block flex-shrink-0 bg-white"
-      >
-        {TASK_CATEGORIES.map((c) => (
-          <option key={c.key} value={c.key}>
-            {c.icon} {c.label.split(" / ")[1] ?? c.label}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={() => onEditTags(task)}
-        title="Edit topics"
-        className="mt-0.5 text-xs text-muted hover:text-primary hidden group-hover:inline-block flex-shrink-0"
-      >
-        🏷
-      </button>
       <span
         className={`mt-0.5 text-[11px] whitespace-nowrap flex-shrink-0 ${
           urgent ? "text-danger font-bold" : "text-muted"
@@ -882,13 +863,96 @@ function TaskRow({
       >
         {waitingLabel(task.addedAt)}
       </span>
-      <button
-        onClick={() => onDelete(task.id)}
-        className="mt-0.5 text-muted hover:text-danger text-xs flex-shrink-0 hidden group-hover:inline-block"
-        title="Delete"
-      >
-        ✕
-      </button>
+      <RowMenu
+        task={task}
+        onMove={(cat) => onPatch(task.id, { category: cat })}
+        onEditTags={() => onEditTags(task)}
+        onDelete={() => onDelete(task.id)}
+      />
     </div>
+  );
+}
+
+// A single "⋯" button that reserves fixed space (so the row never reflows on
+// hover) and opens a small fixed-positioned menu — Move / Topics / Delete.
+function RowMenu({
+  task,
+  onMove,
+  onEditTags,
+  onDelete,
+}: {
+  task: Task;
+  onMove: (cat: string) => void;
+  onEditTags: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  const openMenu = () => {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 176) });
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={openMenu}
+        title="Actions"
+        className="mt-0.5 w-5 text-center text-gray-300 group-hover:text-foreground hover:!text-primary flex-shrink-0 leading-none"
+      >
+        ⋯
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-50 w-44 bg-white rounded-lg shadow-lg border border-border py-1 text-sm"
+            style={{ top: pos.top, left: pos.left }}
+          >
+            <div className="px-3 py-1 text-[10px] font-semibold text-muted uppercase tracking-wide">
+              Move to
+            </div>
+            {TASK_CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => {
+                  onMove(c.key);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2 ${
+                  c.key === task.category ? "font-bold" : ""
+                }`}
+              >
+                <span>{c.icon}</span>
+                <span dir="auto">{c.label.split(" / ")[1] ?? c.label}</span>
+              </button>
+            ))}
+            <div className="border-t border-border my-1" />
+            <button
+              onClick={() => {
+                onEditTags();
+                setOpen(false);
+              }}
+              className="w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2"
+            >
+              🏷 <span>Topics</span>
+            </button>
+            <button
+              onClick={() => {
+                onDelete();
+                setOpen(false);
+              }}
+              className="w-full text-left px-3 py-1 hover:bg-gray-100 text-danger flex items-center gap-2"
+            >
+              🗑 <span>Delete</span>
+            </button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
