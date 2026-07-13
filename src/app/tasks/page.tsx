@@ -93,6 +93,7 @@ export default function TasksPage() {
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState("admin");
   const [newYoav, setNewYoav] = useState("");
+  const [showCovered, setShowCovered] = useState(false);
 
   const loadData = useCallback(() => {
     fetch("/api/tasks")
@@ -651,6 +652,17 @@ export default function TasksPage() {
           </div>
 
           {yoavCovered.length > 0 && (
+            <button
+              onClick={() => setShowCovered((v) => !v)}
+              className="text-xs font-semibold bg-white/90 hover:bg-white rounded-full px-3 py-1 text-muted hover:text-foreground shadow-sm mb-2"
+            >
+              {showCovered
+                ? `▾ Hide covered (${yoavCovered.length})`
+                : `▸ Show covered (${yoavCovered.length})`}
+            </button>
+          )}
+
+          {showCovered && yoavCovered.length > 0 && (
             <div className="card p-0 overflow-hidden">
               <div className="px-2.5 py-1 bg-gray-100 border-b border-border">
                 <h2 className="text-xs font-bold text-muted">
