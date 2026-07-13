@@ -58,6 +58,7 @@ export default function ReadingListPage() {
   const [activeTab, setActiveTab] = useState<string>(IN_PROGRESS);
   const [expandedYear, setExpandedYear] = useState<number>(2026);
   const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
 
   const currentWeekKey = useMemo(() => getCurrentWeekKey(), []);
   const grouped = useMemo(() => groupWeeks(ALL_WEEKS), []);
@@ -112,7 +113,41 @@ export default function ReadingListPage() {
     return submissions.filter((s) => s.week === activeTab);
   }, [submissions, activeTab]);
 
-  const isInProgressTab = activeTab === IN_PROGRESS;
+  // --- Search: matches any field, across every week, from 2+ characters ---
+  const query = search.trim().toLowerCase();
+  const searching = query.length >= 2;
+
+  const weekLabel = useCallback((key: string | null) => {
+    if (!key) return "";
+    const w = ALL_WEEKS.find((x) => x.key === key);
+    return w ? `${w.label}, ${w.year}` : key;
+  }, []);
+
+  const searchResults = useMemo(() => {
+    if (!searching) return [];
+    return submissions.filter((s) => {
+      const haystack = [
+        s.projectName,
+        s.senderName,
+        s.ygpContact,
+        s.senderEmail,
+        s.status,
+        s.updatedBy,
+        weekLabel(s.week),
+        s.dateReceived
+          ? format(new Date(s.dateReceived), "dd/MM/yyyy")
+          : "",
+        s.inProgress ? "in progress" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [submissions, query, searching, weekLabel]);
+
+  const rows = searching ? searchResults : filtered;
+  const isInProgressTab = !searching && activeTab === IN_PROGRESS;
 
   const patchSubmission = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
@@ -295,16 +330,40 @@ export default function ReadingListPage() {
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h1 className="text-xl font-bold text-white drop-shadow">
-            {isInProgressTab
+            {searching
+              ? `Search: “${search.trim()}” — ${searchResults.length} found`
+              : isInProgressTab
               ? "In Progress"
               : (() => {
                   const w = ALL_WEEKS.find((w) => w.key === activeTab);
                   return w ? `${w.label}, ${w.year}` : "Reading List";
                 })()}
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Search across every week and every field */}
+            <div className="relative">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search all projects…"
+                dir="auto"
+                className="text-sm py-1.5 ps-8 pe-7 rounded-lg border border-border bg-white w-56"
+              />
+              <span className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted text-sm pointer-events-none">
+                🔍
+              </span>
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  title="Clear search"
+                  className="absolute end-2 top-1/2 -translate-y-1/2 text-muted hover:text-danger text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <button onClick={addInlineSubmission} className="btn btn-secondary bg-white">
               + Add Manually
             </button>
@@ -321,6 +380,7 @@ export default function ReadingListPage() {
           <table>
             <thead>
               <tr>
+                {searching && <th>Where</th>}
                 <th>Project</th>
                 <th>Sender</th>
                 <th>Received</th>
@@ -335,13 +395,29 @@ export default function ReadingListPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((s) => (
+              {rows.map((s) => (
                 <tr
                   key={s.id}
                   style={{
                     backgroundColor: s.inProgress ? "#ecfdf5" : undefined,
                   }}
                 >
+                  {searching && (
+                    <td className="whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setActiveTab(s.inProgress && !s.week ? IN_PROGRESS : s.week!);
+                          setSearch("");
+                        }}
+                        title="Go to this week"
+                        className="text-xs text-primary hover:underline font-semibold"
+                      >
+                        {s.inProgress && !s.week
+                          ? "In Progress"
+                          : weekLabel(s.week) || "—"}
+                      </button>
+                    </td>
+                  )}
                   <td>
                     <InlineText
                       value={s.projectName}
@@ -474,19 +550,28 @@ export default function ReadingListPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={isInProgressTab ? 7 : 10}
+                    colSpan={(isInProgressTab ? 7 : 10) + (searching ? 1 : 0)}
                     className="text-center text-muted py-8"
                   >
-                    No submissions in this week.{" "}
-                    <button
-                      onClick={addInlineSubmission}
-                      className="text-primary hover:underline"
-                    >
-                      Add one
-                    </button>
+                    {searching ? (
+                      <>
+                        Nothing matches “{search.trim()}”. Try fewer letters, or
+                        a sender / project / status.
+                      </>
+                    ) : (
+                      <>
+                        No submissions in this week.{" "}
+                        <button
+                          onClick={addInlineSubmission}
+                          className="text-primary hover:underline"
+                        >
+                          Add one
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               )}
