@@ -125,6 +125,21 @@ export default function TasksPage() {
       return next;
     });
 
+  const [scanning, setScanning] = useState(false);
+  const scanNow = async () => {
+    setScanning(true);
+    try {
+      const res = await fetch("/api/cron/scan-calendar");
+      const data = await res.json();
+      if (data.error) alert(`Scan failed: ${data.error}`);
+      loadData();
+    } catch {
+      alert("Scan failed. Check the calendar feed setting.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const addSuggestion = async (id: string) => {
     const res = await fetch(`/api/suggestions/${id}`, {
       method: "PATCH",
@@ -335,13 +350,15 @@ export default function TasksPage() {
       {mainTab === "tasks" && (
         <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-3 items-start">
           <div className="min-w-0">
-          {view === "active" && suggestions.length > 0 && (
+          {view === "active" && (
             <SuggestionInbox
               items={suggestions}
               onAdd={addSuggestion}
               onDismiss={dismissSuggestion}
               collapsed={collapsed.has("inbox")}
               onToggle={() => toggleCollapsed("inbox")}
+              onScan={scanNow}
+              scanning={scanning}
             />
           )}
           {/* Controls */}
@@ -721,37 +738,59 @@ function SuggestionInbox({
   onDismiss,
   collapsed,
   onToggle,
+  onScan,
+  scanning,
 }: {
   items: Suggestion[];
   onAdd: (id: string) => void;
   onDismiss: (id: string) => void;
   collapsed: boolean;
   onToggle: () => void;
+  onScan: () => void;
+  scanning: boolean;
 }) {
   return (
     <div
       className="rounded-xl overflow-hidden mb-2 border-2 shadow-sm bg-white"
       style={{ borderColor: "#0ea5e9" }}
     >
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left"
+      <div
+        className="w-full flex items-center gap-2 px-2.5 py-1.5"
         style={{ background: "#0ea5e914" }}
       >
-        <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#0284c7" }}>
-          {collapsed ? "▸" : "▾"}
-        </span>
-        <span
-          className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
-          style={{ background: "#0ea5e922", color: "#0284c7" }}
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2 flex-1 min-w-0 text-left"
         >
-          {items.length}
-        </span>
-        <span className="text-sm leading-none">📥</span>
-        <h2 className="text-xs font-bold" style={{ color: "#0284c7" }}>
-          Suggested from calendar
-        </h2>
-      </button>
+          <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#0284c7" }}>
+            {collapsed ? "▸" : "▾"}
+          </span>
+          <span
+            className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+            style={{ background: "#0ea5e922", color: "#0284c7" }}
+          >
+            {items.length}
+          </span>
+          <span className="text-sm leading-none">📥</span>
+          <h2 className="text-xs font-bold" style={{ color: "#0284c7" }}>
+            Suggested from calendar
+          </h2>
+        </button>
+        <button
+          onClick={onScan}
+          disabled={scanning}
+          className="text-[10px] font-semibold rounded-full px-2 py-0.5 flex-shrink-0 disabled:opacity-50"
+          style={{ background: "#0ea5e922", color: "#0284c7" }}
+          title="Check the calendar for new reminders now"
+        >
+          {scanning ? "Scanning…" : "⟳ Scan now"}
+        </button>
+      </div>
+      {!collapsed && items.length === 0 && (
+        <div className="text-center text-muted py-3 text-xs">
+          Nothing new from the calendar.
+        </div>
+      )}
       {!collapsed &&
         items.map((s) => (
         <div

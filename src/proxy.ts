@@ -11,9 +11,11 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/login";
   const isAuthRoute = pathname.startsWith("/api/auth");
+  // Cron runs with no session; it authenticates itself with CRON_SECRET.
+  const isCronRoute = pathname.startsWith("/api/cron");
 
-  // Allow auth routes and login page
-  if (isAuthRoute || isLoginPage) {
+  // Allow auth routes, login page and cron
+  if (isAuthRoute || isLoginPage || isCronRoute) {
     return NextResponse.next();
   }
 
