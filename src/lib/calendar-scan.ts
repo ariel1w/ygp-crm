@@ -66,6 +66,18 @@ function parseStart(rawKey: string, value: string): Date | null {
   return null;
 }
 
+// Titles that are events/meetings/placeholders rather than to-dos. Matched at
+// the START of the title only, so a real task like "…לתאם פגישה" still counts.
+const NOT_A_TASK_PREFIX =
+  /^(פגישה|פגישות|ישיבת|ישיבה|זום|הקרנת|הקרנה|פרמיירה|צילומים|כנס|VC:|VC |Zoom)/i;
+
+// Blocked-time placeholders — never tasks.
+const PLACEHOLDER = /^(לא פנוי|פנוי|תפוס|busy|hold|ooo|out of office)\s*$/i;
+
+function isNotATask(title: string): boolean {
+  return NOT_A_TASK_PREFIX.test(title.trim()) || PLACEHOLDER.test(title.trim());
+}
+
 function guessCategory(title: string): string {
   const t = title.toLowerCase();
   if (/מיוצג|סוכן|אילן|גאני/.test(title)) return "clients";
@@ -158,6 +170,12 @@ export function parseIcs(ics: string, now = new Date()): ScanResult {
       }
       return;
     }
+
+    // An event/meeting/placeholder rather than a to-do.
+    if (isNotATask(summary)) return;
+
+    // Same reminder parked on the calendar twice — only suggest it once.
+    if (candidates.some((c) => c.title === summary)) return;
 
     candidates.push({
       eventId,

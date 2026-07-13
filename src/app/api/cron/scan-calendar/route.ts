@@ -48,9 +48,9 @@ export async function GET(req: NextRequest) {
     });
     if (seen) continue; // pending, added or dismissed — never re-suggest
 
-    // Don't suggest something already sitting in the task list verbatim.
+    // Don't suggest something already in the task list — open OR already done.
     const dupe = await prisma.task.findFirst({
-      where: { list: "tasks", content: c.title, done: false },
+      where: { list: "tasks", content: c.title },
     });
     if (dupe) continue;
 
