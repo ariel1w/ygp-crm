@@ -24,6 +24,12 @@ export async function PATCH(
   if ("category" in body) data.category = body.category || "admin";
   if ("tags" in body) data.tags = typeof body.tags === "string" ? body.tags : "";
   if ("important" in body) data.important = Boolean(body.important);
+  // Postpone: an ISO date to hide it until, or null to bring it back now.
+  if ("snoozedUntil" in body) {
+    data.snoozedUntil = body.snoozedUntil
+      ? new Date(body.snoozedUntil)
+      : null;
+  }
   if ("done" in body) {
     data.done = Boolean(body.done);
     // Stamp/clear the completion time when the done flag flips.

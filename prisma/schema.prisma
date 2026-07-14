@@ -94,6 +94,7 @@ model Task {
   important   Boolean   @default(false)
   done        Boolean   @default(false)
   addedAt     DateTime  @default(now())
+  snoozedUntil DateTime? // postponed: hidden from the active list until this time
   completedAt DateTime?
   source      String    @default("manual") // manual, calendar
   createdAt   DateTime  @default(now())

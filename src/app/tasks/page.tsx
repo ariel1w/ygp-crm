@@ -18,9 +18,37 @@ interface Task {
   important: boolean;
   done: boolean;
   addedAt: string;
+  snoozedUntil: string | null;
   completedAt: string | null;
   source: string;
 }
+
+/** Currently postponed — hidden from the active list. */
+function isSnoozed(t: Task): boolean {
+  return !!t.snoozedUntil && new Date(t.snoozedUntil).getTime() > Date.now();
+}
+/** Came back from a postpone within the last 2 days — worth flagging. */
+function justReturned(t: Task): boolean {
+  if (!t.snoozedUntil) return false;
+  const back = new Date(t.snoozedUntil).getTime();
+  const now = Date.now();
+  return back <= now && now - back < 2 * 86400000;
+}
+/** "returns in 3d" / "returns in 5h" */
+function returnsIn(iso: string): string {
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return "back now";
+  const hours = Math.ceil(ms / 3600000);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.ceil(hours / 24)}d`;
+}
+
+const POSTPONE_OPTIONS = [
+  { label: "24 hours", ms: 24 * 3600000 },
+  { label: "3 days", ms: 3 * 86400000 },
+  { label: "1 week", ms: 7 * 86400000 },
+  { label: "2 weeks", ms: 14 * 86400000 },
+];
 
 interface Suggestion {
   id: string;
@@ -227,8 +255,20 @@ export default function TasksPage() {
   const yoavActive = useMemo(() => yoavAll.filter((t) => !t.done), [yoavAll]);
   const yoavCovered = useMemo(() => yoavAll.filter((t) => t.done), [yoavAll]);
 
-  const active = useMemo(() => taskItems.filter((t) => !t.done), [taskItems]);
+  // Postponed tasks leave the active list entirely (and its counts) until due.
+  const active = useMemo(
+    () => taskItems.filter((t) => !t.done && !isSnoozed(t)),
+    [taskItems]
+  );
+  const postponed = useMemo(
+    () => taskItems.filter((t) => !t.done && isSnoozed(t)),
+    [taskItems]
+  );
   const archived = useMemo(() => taskItems.filter((t) => t.done), [taskItems]);
+
+  const postponeTask = (id: string, ms: number) =>
+    patchTask(id, { snoozedUntil: new Date(Date.now() + ms).toISOString() });
+  const unpostponeTask = (id: string) => patchTask(id, { snoozedUntil: null });
 
   const byImportantThenAge = (a: Task, b: Task) => {
     if (a.important !== b.important) return a.important ? -1 : 1;
@@ -454,6 +494,7 @@ export default function TasksPage() {
                   onDelete={deleteTask}
                   onEditTags={editTags}
                   onTagClick={setTopicFilter}
+                  onPostpone={postponeTask}
                   showCategory
                 />
               ))}
@@ -485,6 +526,7 @@ export default function TasksPage() {
                           onDelete={deleteTask}
                           onEditTags={editTags}
                           onTagClick={setTopicFilter}
+                  onPostpone={postponeTask}
                         />
                       ))}
                   </div>
@@ -542,6 +584,7 @@ export default function TasksPage() {
                           onDelete={deleteTask}
                           onEditTags={editTags}
                           onTagClick={setTopicFilter}
+                  onPostpone={postponeTask}
                           showCategory
                         />
                       ))}
@@ -594,6 +637,16 @@ export default function TasksPage() {
 
           <div className="min-w-0">
             <IdeasPanel />
+            <PostponedPanel
+              items={[...postponed].sort(
+                (a, b) =>
+                  new Date(a.snoozedUntil!).getTime() -
+                  new Date(b.snoozedUntil!).getTime()
+              )}
+              onReturn={unpostponeTask}
+              collapsed={collapsed.has("postponed")}
+              onToggle={() => toggleCollapsed("postponed")}
+            />
           </div>
         </div>
       )}
@@ -744,6 +797,79 @@ function EmptyRow() {
   );
 }
 
+// Postponed tasks — off the active list until they're due back.
+function PostponedPanel({
+  items,
+  onReturn,
+  collapsed,
+  onToggle,
+}: {
+  items: Task[];
+  onReturn: (id: string) => void;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="card p-0 overflow-hidden mt-3">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-3 py-2 border-b border-border text-left"
+        style={{ background: "#64748b14", borderLeft: "3px solid #64748b" }}
+      >
+        <span className="text-[10px] w-3 flex-shrink-0" style={{ color: "#64748b" }}>
+          {collapsed ? "▸" : "▾"}
+        </span>
+        <span
+          className="text-[11px] font-bold rounded-full px-1.5 flex-shrink-0"
+          style={{ background: "#64748b22", color: "#64748b" }}
+        >
+          {items.length}
+        </span>
+        <span className="text-base leading-none">😴</span>
+        <h2 className="text-sm font-bold" style={{ color: "#64748b" }}>
+          Postponed
+        </h2>
+      </button>
+
+      {!collapsed && items.length === 0 && (
+        <div className="text-center text-muted py-4 text-xs">
+          Nothing postponed.
+        </div>
+      )}
+
+      {!collapsed &&
+        items.map((t) => (
+          <div
+            key={t.id}
+            className="group flex items-center gap-2 px-3 py-1 border-b border-border/60 last:border-b-0 hover:bg-gray-50"
+          >
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ background: categoryColor(t.category) }}
+              title={t.category}
+            />
+            <span dir="auto" className="flex-1 min-w-0 text-sm truncate">
+              {t.content}
+            </span>
+            <span
+              className="text-[10px] text-muted whitespace-nowrap flex-shrink-0"
+              title={`Waiting ${daysWaiting(t.addedAt)} days overall`}
+            >
+              back in {returnsIn(t.snoozedUntil!)}
+            </span>
+            <button
+              onClick={() => onReturn(t.id)}
+              title="Bring it back now"
+              className="text-[10px] text-primary hover:underline whitespace-nowrap flex-shrink-0"
+            >
+              return
+            </button>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 function SuggestionInbox({
   items,
   onAdd,
@@ -846,6 +972,7 @@ function TaskRow({
   onDelete,
   onEditTags,
   onTagClick,
+  onPostpone,
   showCategory = false,
 }: {
   task: Task;
@@ -853,15 +980,17 @@ function TaskRow({
   onDelete: (id: string) => void;
   onEditTags: (t: Task) => void;
   onTagClick: (tag: string) => void;
+  onPostpone: (id: string, ms: number) => void;
   showCategory?: boolean;
 }) {
   const d = daysWaiting(task.addedAt);
   const urgent = d >= 14;
   const tags = splitTags(task.tags);
+  const back = justReturned(task);
   return (
     <div
       className={`group flex items-start gap-1.5 px-2.5 py-1 border-b border-border/50 last:border-b-0 hover:bg-gray-50 ${
-        task.important ? "bg-amber-50/60" : ""
+        back ? "bg-sky-50" : task.important ? "bg-amber-50/60" : ""
       }`}
     >
       <button
@@ -889,6 +1018,14 @@ function TaskRow({
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ background: categoryColor(task.category) }}
             />
+          )}
+          {back && (
+            <span
+              title="Came back from postpone"
+              className="text-[10px] font-bold rounded-full px-1.5 flex-shrink-0 bg-sky-100 text-sky-700"
+            >
+              back
+            </span>
           )}
           <span className="flex-1 min-w-0 text-sm font-medium" dir="auto">
             <InlineText
@@ -919,6 +1056,7 @@ function TaskRow({
         onMove={(cat) => onPatch(task.id, { category: cat })}
         onEditTags={() => onEditTags(task)}
         onDelete={() => onDelete(task.id)}
+        onPostpone={(ms) => onPostpone(task.id, ms)}
       />
     </div>
   );
@@ -931,11 +1069,13 @@ function RowMenu({
   onMove,
   onEditTags,
   onDelete,
+  onPostpone,
 }: {
   task: Task;
   onMove: (cat: string) => void;
   onEditTags: () => void;
   onDelete: () => void;
+  onPostpone: (ms: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -943,7 +1083,14 @@ function RowMenu({
 
   const openMenu = () => {
     const r = btnRef.current?.getBoundingClientRect();
-    if (r) setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 176) });
+    if (r) {
+      const MENU_H = 330; // approx; keeps the menu on screen near the bottom
+      const top = Math.max(
+        8,
+        Math.min(r.bottom + 4, window.innerHeight - MENU_H - 8)
+      );
+      setPos({ top, left: Math.max(8, r.right - 176) });
+    }
     setOpen(true);
   };
 
@@ -964,6 +1111,23 @@ function RowMenu({
             className="fixed z-50 w-44 bg-white rounded-lg shadow-lg border border-border py-1 text-sm"
             style={{ top: pos.top, left: pos.left }}
           >
+            <div className="px-3 py-1 text-[10px] font-semibold text-muted uppercase tracking-wide">
+              Postpone
+            </div>
+            {POSTPONE_OPTIONS.map((p) => (
+              <button
+                key={p.label}
+                onClick={() => {
+                  onPostpone(p.ms);
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <span>😴</span>
+                <span>{p.label}</span>
+              </button>
+            ))}
+            <div className="border-t border-border my-1" />
             <div className="px-3 py-1 text-[10px] font-semibold text-muted uppercase tracking-wide">
               Move to
             </div>
