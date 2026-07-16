@@ -19,6 +19,7 @@ export async function PATCH(
   if ("updatedBy" in body) data.updatedBy = body.updatedBy || null;
   if ("wasUpdated" in body) data.wasUpdated = body.wasUpdated || null;
   if ("inProgress" in body) data.inProgress = body.inProgress;
+  if ("notes" in body) data.notes = body.notes || "";
 
   const submission = await prisma.submission.update({ where: { id }, data });
   return NextResponse.json(submission);

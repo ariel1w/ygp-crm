@@ -19,6 +19,7 @@ interface Submission {
   wasUpdated: string | null;
   inProgress: boolean;
   week: string | null;
+  notes: string;
 }
 
 const UPDATED_OPTIONS = [
@@ -59,6 +60,11 @@ export default function ReadingListPage() {
   const [expandedYear, setExpandedYear] = useState<number>(2026);
   const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [noteModal, setNoteModal] = useState<{
+    id: string;
+    projectName: string;
+    draft: string;
+  } | null>(null);
 
   const currentWeekKey = useMemo(() => getCurrentWeekKey(), []);
   const grouped = useMemo(() => groupWeeks(ALL_WEEKS), []);
@@ -138,6 +144,7 @@ export default function ReadingListPage() {
           ? format(new Date(s.dateReceived), "dd/MM/yyyy")
           : "",
         s.inProgress ? "in progress" : "",
+        s.notes,
       ]
         .filter(Boolean)
         .join(" ")
@@ -382,6 +389,7 @@ export default function ReadingListPage() {
               <tr>
                 {searching && <th>Where</th>}
                 <th>Project</th>
+                <th>Notes</th>
                 <th>Sender</th>
                 <th>Received</th>
                 <th>YGP Contact</th>
@@ -426,6 +434,25 @@ export default function ReadingListPage() {
                         patchSubmission(s.id, { projectName: val })
                       }
                     />
+                  </td>
+                  <td className="text-center">
+                    <button
+                      onClick={() =>
+                        setNoteModal({
+                          id: s.id,
+                          projectName: s.projectName,
+                          draft: s.notes || "",
+                        })
+                      }
+                      title={s.notes ? s.notes : "Add note"}
+                      className={`rounded px-1 py-0.5 text-sm transition-opacity ${
+                        s.notes
+                          ? "hover:bg-blue-50"
+                          : "opacity-0 hover:opacity-50"
+                      }`}
+                    >
+                      {s.notes ? "📝" : "➕"}
+                    </button>
                   </td>
                   <td>
                     <InlineText
@@ -553,7 +580,7 @@ export default function ReadingListPage() {
               {rows.length === 0 && (
                 <tr>
                   <td
-                    colSpan={(isInProgressTab ? 7 : 10) + (searching ? 1 : 0)}
+                    colSpan={(isInProgressTab ? 8 : 11) + (searching ? 1 : 0)}
                     className="text-center text-muted py-8"
                   >
                     {searching ? (
@@ -579,6 +606,61 @@ export default function ReadingListPage() {
           </table>
         </div>
       </div>
+
+      {/* Notes popup */}
+      {noteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setNoteModal(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4"
+            onClick={(e) => e.stopPropagation()}
+            dir="auto"
+          >
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <h2 className="text-base font-bold text-foreground truncate">
+                Notes{noteModal.projectName ? `: ${noteModal.projectName}` : ""}
+              </h2>
+              <button
+                onClick={() => setNoteModal(null)}
+                title="Close"
+                className="text-muted hover:text-danger text-lg leading-none flex-shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+            <textarea
+              autoFocus
+              value={noteModal.draft}
+              onChange={(e) =>
+                setNoteModal({ ...noteModal, draft: e.target.value })
+              }
+              placeholder="Write a note about this project…"
+              dir="auto"
+              rows={6}
+              className="w-full text-sm p-2 border border-border rounded-lg resize-y"
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <button
+                onClick={() => setNoteModal(null)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  patchSubmission(noteModal.id, { notes: noteModal.draft });
+                  setNoteModal(null);
+                }}
+                className="btn btn-primary"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
