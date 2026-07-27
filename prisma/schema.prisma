@@ -81,8 +81,12 @@ model SlateProject {
   distributor    String?
   airDate        String?
   ip             String?
+  // Manual position within a stage. Lower = higher up the list.
+  sortOrder      Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([stage, sortOrder])
 }
 
 model Task {

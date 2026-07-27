@@ -21,6 +21,16 @@ export async function PATCH(
   // name should never be null
   if ("name" in body) data.name = body.name || "";
 
+  // Moving to another stage: land at the top of that stage rather than
+  // keeping a position that means nothing in the new list.
+  if (typeof body.stage === "string" && body.stage) {
+    const top = await prisma.slateProject.aggregate({
+      where: { stage: body.stage },
+      _min: { sortOrder: true },
+    });
+    data.sortOrder = (top._min.sortOrder ?? 1) - 1;
+  }
+
   const project = await prisma.slateProject.update({ where: { id }, data });
   return NextResponse.json(project);
 }
