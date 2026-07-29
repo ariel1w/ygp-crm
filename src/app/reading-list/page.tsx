@@ -29,6 +29,11 @@ const UPDATED_OPTIONS = [
 
 const IN_PROGRESS = "__in_progress__";
 
+// Status is either the fixed rejection "לא" (which reddens the whole row)
+// or a free-text note. The two are mutually exclusive.
+const REJECTED = "לא";
+const isRejected = (status: string | null) => (status || "").trim() === REJECTED;
+
 // Generate weeks for 2026-2027
 const ALL_WEEKS = generateWeeks(2026, new Date().getFullYear() + 1);
 
@@ -407,7 +412,13 @@ export default function ReadingListPage() {
                 <tr
                   key={s.id}
                   style={{
-                    backgroundColor: s.inProgress ? "#ecfdf5" : undefined,
+                    // A "לא" status reddens the whole row and beats the
+                    // In Progress green.
+                    backgroundColor: isRejected(s.status)
+                      ? "#fee2e2"
+                      : s.inProgress
+                        ? "#ecfdf5"
+                        : undefined,
                   }}
                 >
                   {searching && (
@@ -504,11 +515,34 @@ export default function ReadingListPage() {
                     />
                   </td>
                   <td>
-                    <InlineText
-                      value={s.status || ""}
-                      placeholder="Status"
-                      onSave={(val) => patchSubmission(s.id, { status: val })}
-                    />
+                    <div className="flex items-center gap-1 whitespace-nowrap">
+                      <button
+                        onClick={() =>
+                          patchSubmission(s.id, {
+                            status: isRejected(s.status) ? "" : REJECTED,
+                          })
+                        }
+                        title={
+                          isRejected(s.status)
+                            ? "Clear לא"
+                            : "Mark לא (turns the whole row red)"
+                        }
+                        className={`rounded px-1.5 py-0.5 text-xs font-bold border transition-colors ${
+                          isRejected(s.status)
+                            ? "bg-red-500 text-white border-red-500"
+                            : "text-muted border-border hover:border-red-400 hover:text-red-500"
+                        }`}
+                      >
+                        {REJECTED}
+                      </button>
+                      <InlineText
+                        value={isRejected(s.status) ? "" : s.status || ""}
+                        placeholder="Note"
+                        onSave={(val) =>
+                          patchSubmission(s.id, { status: val })
+                        }
+                      />
+                    </div>
                   </td>
                   {!isInProgressTab && (
                     <td>
