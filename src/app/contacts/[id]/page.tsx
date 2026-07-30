@@ -147,12 +147,14 @@ export default function ContactDetailPage({
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold">{contact.name}</h1>
-            <span
-              className="badge"
-              style={{ backgroundColor: statusInfo.bgColor, color: statusInfo.color }}
-            >
-              {statusInfo.label}
-            </span>
+            {statusInfo.label && (
+              <span
+                className="badge"
+                style={{ backgroundColor: statusInfo.bgColor, color: statusInfo.color }}
+              >
+                {statusInfo.label}
+              </span>
+            )}
           </div>
           {contact.company && (
             <p className="text-muted">

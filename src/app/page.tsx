@@ -49,12 +49,9 @@ export default function Dashboard() {
   }, [contacts, ownerFilter]);
 
   const overdue = enriched.filter((c) => c.statusInfo.status === "overdue");
-  const dueSoon = enriched.filter((c) => c.statusInfo.status === "due-soon");
   const needsAttention = enriched.filter(
     (c) => c.statusInfo.status === "needs-attention"
   );
-  const cold = enriched.filter((c) => c.statusInfo.status === "cold");
-  const newContacts = enriched.filter((c) => c.statusInfo.status === "new");
   const active = enriched.filter((c) => c.statusInfo.status === "active");
 
   if (loading) return (
@@ -92,30 +89,19 @@ export default function Dashboard() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-8">
         <SummaryCard label="Overdue" count={overdue.length} color="#ef4444" />
-        <SummaryCard label="Due This Week" count={dueSoon.length} color="#f59e0b" />
-        <SummaryCard label="Needs Attention" count={needsAttention.length} color="#f04e5e" />
-        <SummaryCard label="Going Cold" count={cold.length} color="#8c8c8c" />
+        <SummaryCard label="Needs Attention" count={needsAttention.length} color="#3b82f6" />
         <SummaryCard label="Active" count={active.length} color="#10b981" />
-        <SummaryCard label="New / Unworked" count={newContacts.length} color="#7c5cfc" />
       </div>
 
       {/* Sections in priority order */}
       {overdue.length > 0 && (
         <DashboardSection
           title="Overdue"
+          subtitle="Follow-up date was yesterday or earlier"
           titleColor="#ef4444"
           contacts={overdue}
-          onQuickLog={setQuickLogContact}
-        />
-      )}
-
-      {dueSoon.length > 0 && (
-        <DashboardSection
-          title="Due This Week"
-          titleColor="#f59e0b"
-          contacts={dueSoon}
           onQuickLog={setQuickLogContact}
         />
       )}
@@ -123,32 +109,10 @@ export default function Dashboard() {
       {needsAttention.length > 0 && (
         <DashboardSection
           title="Needs Attention"
-          subtitle="Last contact 21-60 days ago, no follow-up set"
-          titleColor="#f04e5e"
+          subtitle="No contact in 2 months"
+          titleColor="#3b82f6"
           contacts={needsAttention}
           onQuickLog={setQuickLogContact}
-        />
-      )}
-
-      {cold.length > 0 && (
-        <DashboardSection
-          title="Going Cold"
-          subtitle="No contact in 60+ days"
-          titleColor="#8c8c8c"
-          contacts={cold}
-          onQuickLog={setQuickLogContact}
-          defaultCollapsed
-        />
-      )}
-
-      {newContacts.length > 0 && (
-        <DashboardSection
-          title="New / Unworked"
-          subtitle="No interaction logged yet"
-          titleColor="#7c5cfc"
-          contacts={newContacts}
-          onQuickLog={setQuickLogContact}
-          defaultCollapsed
         />
       )}
 

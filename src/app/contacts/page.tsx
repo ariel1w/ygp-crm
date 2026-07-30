@@ -32,11 +32,9 @@ interface Project {
 const STATUS_OPTIONS: { value: ContactStatus | ""; label: string }[] = [
   { value: "", label: "All Statuses" },
   { value: "overdue", label: "Overdue" },
-  { value: "due-soon", label: "Due Soon" },
   { value: "needs-attention", label: "Needs Attention" },
-  { value: "cold", label: "Going Cold" },
   { value: "active", label: "Active" },
-  { value: "new", label: "New / Unworked" },
+  { value: "none", label: "No Status" },
 ];
 
 export default function ContactsPage() {
@@ -260,12 +258,14 @@ export default function ContactsPage() {
               return (
                 <tr key={c.id} style={{ backgroundColor: si.bgColor }}>
                   <td>
-                    <span
-                      className="badge text-xs"
-                      style={{ backgroundColor: si.bgColor, color: si.color }}
-                    >
-                      {si.label}
-                    </span>
+                    {si.label && (
+                      <span
+                        className="badge text-xs"
+                        style={{ backgroundColor: si.bgColor, color: si.color }}
+                      >
+                        {si.label}
+                      </span>
+                    )}
                   </td>
                   <td>
                     <Link
