@@ -34,6 +34,11 @@ const IN_PROGRESS = "__in_progress__";
 const REJECTED = "לא";
 const isRejected = (status: string | null) => (status || "").trim() === REJECTED;
 
+// A row only turns red once the project was rejected AND the sender was
+// notified. Rejected but not yet notified looks like any other row.
+const isClosed = (s: { status: string | null; wasUpdated: string | null }) =>
+  isRejected(s.status) && s.wasUpdated === "Yes";
+
 // Free-text fields that can be opened in the popup editor.
 type TextField = "notes" | "status" | "projectName" | "senderName" | "senderEmail";
 
@@ -460,9 +465,9 @@ export default function ReadingListPage() {
                 <tr
                   key={s.id}
                   style={{
-                    // A "לא" status reddens the whole row and beats the
-                    // In Progress green.
-                    backgroundColor: isRejected(s.status)
+                    // "לא" plus a Yes in Notified? reddens the whole row and
+                    // beats the In Progress green.
+                    backgroundColor: isClosed(s)
                       ? "#fee2e2"
                       : s.inProgress
                         ? "#ecfdf5"
@@ -577,7 +582,7 @@ export default function ReadingListPage() {
                         title={
                           isRejected(s.status)
                             ? "Clear לא"
-                            : "Mark לא (turns the whole row red)"
+                            : "Mark לא (the row turns red once Notified? is Yes)"
                         }
                         className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-bold border transition-colors ${
                           isRejected(s.status)
