@@ -34,6 +34,12 @@ const IN_PROGRESS = "__in_progress__";
 const REJECTED = "לא";
 const isRejected = (status: string | null) => (status || "").trim() === REJECTED;
 
+// Free-text fields that can be opened in the popup editor.
+type TextField = "notes" | "status" | "projectName" | "senderName" | "senderEmail";
+
+// Every visible cell is capped at two lines, so rows stay short.
+const CLAMP_LINES = 2;
+
 // Generate weeks for 2026-2027
 const ALL_WEEKS = generateWeeks(2026, new Date().getFullYear() + 1);
 
@@ -65,9 +71,13 @@ export default function ReadingListPage() {
   const [expandedYear, setExpandedYear] = useState<number>(2026);
   const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [noteModal, setNoteModal] = useState<{
+  // One popup serves every long text field: the 📝 note, and any cell whose
+  // text is too long to fit in its two visible lines.
+  const [textModal, setTextModal] = useState<{
     id: string;
     projectName: string;
+    field: TextField;
+    label: string;
     draft: string;
   } | null>(null);
 
@@ -161,6 +171,26 @@ export default function ReadingListPage() {
   const rows = searching ? searchResults : filtered;
   const isInProgressTab = !searching && activeTab === IN_PROGRESS;
 
+  // Column widths as shares of the table, in the same order as the headers.
+  // They are normalised to 100%, so the table always fits the screen exactly
+  // and never scrolls sideways.
+  const colWidths = useMemo(() => {
+    const weights = [
+      ...(searching ? [9] : []), // Where
+      16, // Project
+      4, // Notes
+      12, // Sender
+      6, // Received
+      9, // YGP Contact
+      14, // Email / Phone
+      20, // Status
+      ...(isInProgressTab ? [6] : [9, 7, 6]), // Remove | Notified By, Notified?, In Progress
+      4, // delete
+    ];
+    const total = weights.reduce((a, b) => a + b, 0);
+    return weights.map((w) => (w / total) * 100);
+  }, [searching, isInProgressTab]);
+
   const patchSubmission = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
       const res = await fetch(`/api/submissions/${id}`, {
@@ -172,6 +202,19 @@ export default function ReadingListPage() {
       setSubmissions((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
       );
+    },
+    []
+  );
+
+  const openTextModal = useCallback(
+    (s: Submission, field: TextField, label: string) => {
+      setTextModal({
+        id: s.id,
+        projectName: s.projectName,
+        field,
+        label,
+        draft: (s[field] as string | null) || "",
+      });
     },
     []
   );
@@ -388,8 +431,13 @@ export default function ReadingListPage() {
           </div>
         </div>
 
-        <div className="card p-0 overflow-hidden overflow-x-auto">
-          <table>
+        <div className="card p-0 overflow-hidden">
+          <table className="table-fixed-cols">
+            <colgroup>
+              {colWidths.map((w, i) => (
+                <col key={i} style={{ width: `${w}%` }} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
                 {searching && <th>Where</th>}
@@ -422,7 +470,7 @@ export default function ReadingListPage() {
                   }}
                 >
                   {searching && (
-                    <td className="whitespace-nowrap">
+                    <td>
                       <button
                         onClick={() => {
                           setActiveTab(s.inProgress && !s.week ? IN_PROGRESS : s.week!);
@@ -441,6 +489,10 @@ export default function ReadingListPage() {
                     <InlineText
                       value={s.projectName}
                       placeholder="Project name"
+                      clampLines={CLAMP_LINES}
+                      onExpand={() =>
+                        openTextModal(s, "projectName", "Project name")
+                      }
                       onSave={(val) =>
                         patchSubmission(s.id, { projectName: val })
                       }
@@ -448,13 +500,7 @@ export default function ReadingListPage() {
                   </td>
                   <td className="text-center">
                     <button
-                      onClick={() =>
-                        setNoteModal({
-                          id: s.id,
-                          projectName: s.projectName,
-                          draft: s.notes || "",
-                        })
-                      }
+                      onClick={() => openTextModal(s, "notes", "Notes")}
                       title={s.notes ? s.notes : "Add note"}
                       className={`rounded px-1 py-0.5 text-sm transition-opacity ${
                         s.notes
@@ -469,6 +515,8 @@ export default function ReadingListPage() {
                     <InlineText
                       value={s.senderName || ""}
                       placeholder="Sender"
+                      clampLines={CLAMP_LINES}
+                      onExpand={() => openTextModal(s, "senderName", "Sender")}
                       onSave={(val) =>
                         patchSubmission(s.id, { senderName: val })
                       }
@@ -509,13 +557,17 @@ export default function ReadingListPage() {
                     <InlineText
                       value={s.senderEmail || ""}
                       placeholder="Email/Phone"
+                      clampLines={CLAMP_LINES}
+                      onExpand={() =>
+                        openTextModal(s, "senderEmail", "Email / Phone")
+                      }
                       onSave={(val) =>
                         patchSubmission(s.id, { senderEmail: val })
                       }
                     />
                   </td>
                   <td>
-                    <div className="flex items-center gap-1 whitespace-nowrap">
+                    <div className="flex items-start gap-1">
                       <button
                         onClick={() =>
                           patchSubmission(s.id, {
@@ -527,7 +579,7 @@ export default function ReadingListPage() {
                             ? "Clear לא"
                             : "Mark לא (turns the whole row red)"
                         }
-                        className={`rounded px-1.5 py-0.5 text-xs font-bold border transition-colors ${
+                        className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-bold border transition-colors ${
                           isRejected(s.status)
                             ? "bg-red-500 text-white border-red-500"
                             : "text-muted border-border hover:border-red-400 hover:text-red-500"
@@ -535,13 +587,17 @@ export default function ReadingListPage() {
                       >
                         {REJECTED}
                       </button>
-                      <InlineText
-                        value={isRejected(s.status) ? "" : s.status || ""}
-                        placeholder="Note"
-                        onSave={(val) =>
-                          patchSubmission(s.id, { status: val })
-                        }
-                      />
+                      <div className="flex-1 min-w-0">
+                        <InlineText
+                          value={isRejected(s.status) ? "" : s.status || ""}
+                          placeholder="Note"
+                          clampLines={CLAMP_LINES}
+                          onExpand={() => openTextModal(s, "status", "Status")}
+                          onSave={(val) =>
+                            patchSubmission(s.id, { status: val })
+                          }
+                        />
+                      </div>
                     </div>
                   </td>
                   {!isInProgressTab && (
@@ -641,11 +697,11 @@ export default function ReadingListPage() {
         </div>
       </div>
 
-      {/* Notes popup */}
-      {noteModal && (
+      {/* Popup for the 📝 note and for any text too long to show in the row */}
+      {textModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setNoteModal(null)}
+          onClick={() => setTextModal(null)}
         >
           <div
             className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4"
@@ -654,10 +710,13 @@ export default function ReadingListPage() {
           >
             <div className="flex items-center justify-between mb-3 gap-2">
               <h2 className="text-base font-bold text-foreground truncate">
-                Notes{noteModal.projectName ? `: ${noteModal.projectName}` : ""}
+                {textModal.label}
+                {textModal.projectName && textModal.field !== "projectName"
+                  ? `: ${textModal.projectName}`
+                  : ""}
               </h2>
               <button
-                onClick={() => setNoteModal(null)}
+                onClick={() => setTextModal(null)}
                 title="Close"
                 className="text-muted hover:text-danger text-lg leading-none flex-shrink-0"
               >
@@ -666,26 +725,32 @@ export default function ReadingListPage() {
             </div>
             <textarea
               autoFocus
-              value={noteModal.draft}
+              value={textModal.draft}
               onChange={(e) =>
-                setNoteModal({ ...noteModal, draft: e.target.value })
+                setTextModal({ ...textModal, draft: e.target.value })
               }
-              placeholder="Write a note about this project…"
+              placeholder={
+                textModal.field === "notes"
+                  ? "Write a note about this project…"
+                  : textModal.label
+              }
               dir="auto"
-              rows={6}
+              rows={textModal.field === "notes" ? 6 : 4}
               className="w-full text-sm p-2 border border-border rounded-lg resize-y"
             />
             <div className="flex justify-end gap-2 mt-3">
               <button
-                onClick={() => setNoteModal(null)}
+                onClick={() => setTextModal(null)}
                 className="btn btn-secondary"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  patchSubmission(noteModal.id, { notes: noteModal.draft });
-                  setNoteModal(null);
+                  patchSubmission(textModal.id, {
+                    [textModal.field]: textModal.draft,
+                  });
+                  setTextModal(null);
                 }}
                 className="btn btn-primary"
               >

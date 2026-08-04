@@ -170,6 +170,21 @@ tr:hover {
   filter: brightness(0.97);
 }
 
+/* Columns keep the widths given in <colgroup> instead of stretching to fit
+   their content, so one long value can never widen the whole table. */
+.table-fixed-cols {
+  table-layout: fixed;
+}
+
+.table-fixed-cols th {
+  white-space: normal;
+}
+
+.table-fixed-cols td {
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

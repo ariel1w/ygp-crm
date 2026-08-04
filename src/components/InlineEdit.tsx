@@ -6,14 +6,22 @@ export function InlineText({
   value,
   placeholder,
   onSave,
+  clampLines,
+  onExpand,
 }: {
   value: string;
   placeholder?: string;
   onSave: (val: string) => void;
+  /** Wrap the text but show at most this many lines, cutting the rest off. */
+  clampLines?: number;
+  /** When the text is cut off, clicking calls this instead of editing inline. */
+  onExpand?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
+  const [clipped, setClipped] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
+  const displayRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (editing) ref.current?.focus();
@@ -23,11 +31,39 @@ export function InlineText({
     setDraft(value);
   }, [value]);
 
+  // Does the value actually overflow the clamp? Re-measured on resize, since
+  // the column width changes with the window.
+  useEffect(() => {
+    if (!clampLines || editing) return;
+    const el = displayRef.current;
+    if (!el) return;
+    const measure = () => setClipped(el.scrollHeight - el.clientHeight > 1);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [clampLines, editing, value]);
+
   if (!editing) {
+    const expandable = clipped && !!onExpand;
     return (
       <button
-        onClick={() => setEditing(true)}
+        ref={displayRef}
+        onClick={() => (expandable ? onExpand!() : setEditing(true))}
+        title={expandable ? "Click to read and edit the full text" : undefined}
         className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
+        style={
+          clampLines
+            ? {
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: clampLines,
+                overflow: "hidden",
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+              }
+            : undefined
+        }
       >
         {value || <span className="text-muted italic">{placeholder || "—"}</span>}
       </button>
