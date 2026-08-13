@@ -463,14 +463,16 @@ export function InlineProjects({
       const width = Math.min(Math.max(r.width, 260), 340);
       const below = window.innerHeight - r.bottom - margin;
       const above = r.top - margin;
-      const flip = below < 240 && above > below;
+      const flip = below < 280 && above > below;
       setPos({
         left: Math.min(
           Math.max(margin, r.left),
           window.innerWidth - width - margin
         ),
         width,
-        maxHeight: Math.min(360, flip ? above : below),
+        // Never squeeze below 200px, or the search box eats the whole panel
+        // and no project names are left showing.
+        maxHeight: Math.max(200, Math.min(360, flip ? above : below)),
         ...(flip
           ? { bottom: window.innerHeight - r.top + 4 }
           : { top: r.bottom + 4 }),
@@ -525,11 +527,14 @@ export function InlineProjects({
       key={p.id}
       className="flex items-center gap-2 px-2 py-1.5 hover:bg-[var(--primary-light)] rounded cursor-pointer text-sm"
     >
+      {/* Inline size: globals.css puts width:100% on every input, and that
+          unlayered rule beats Tailwind's w-* classes. */}
       <input
         type="checkbox"
         checked={draft.includes(p.id)}
         onChange={() => toggle(p.id)}
-        className="w-3.5 h-3.5 shrink-0"
+        style={{ width: "0.875rem", height: "0.875rem", padding: 0 }}
+        className="shrink-0"
       />
       <span className="truncate">{p.name}</span>
     </label>
@@ -591,16 +596,20 @@ export function InlineProjects({
               width: pos.width,
               maxHeight: pos.maxHeight,
             }}
-            className="fixed z-50 flex flex-col bg-card border border-border rounded-md shadow-lg"
+            className="fixed z-50 flex flex-col overflow-hidden bg-card border border-border rounded-md shadow-lg"
           >
-            <input
-              ref={searchRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search projects..."
-              className="m-2 mb-1 text-sm"
-            />
-            <div className="overflow-y-auto p-1 pt-0">
+            {/* Padding on the wrapper, not margin on the input: the input is
+                width:100% and margins would push it past the panel edge. */}
+            <div className="p-2 pb-1 shrink-0">
+              <input
+                ref={searchRef}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search projects..."
+                className="text-sm"
+              />
+            </div>
+            <div className="overflow-y-auto min-h-0 p-1 pt-0">
               {picked.map(row)}
               {picked.length > 0 && rest.length > 0 && (
                 <div className="border-t border-border my-1" />
