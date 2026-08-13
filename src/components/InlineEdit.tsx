@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 
 export function InlineText({
   value,
@@ -408,6 +409,15 @@ export function InlineMultiSelect({
   );
 }
 
+/** Where the picker panel should sit on screen, in viewport coordinates. */
+type PanelPos = {
+  left: number;
+  width: number;
+  maxHeight: number;
+  top?: number;
+  bottom?: number;
+};
+
 export function InlineProjects({
   selected,
   allProjects,
@@ -418,59 +428,193 @@ export function InlineProjects({
   onSave: (projectIds: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState("");
+  // Ticks live here while the panel is open, so several picks are one save.
+  const [draft, setDraft] = useState<string[]>([]);
+  const [pos, setPos] = useState<PanelPos | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
   const selectedIds = selected.map((s) => s.project.id);
+  const savedKey = [...selectedIds].sort().join(",");
+
+  const openPanel = () => {
+    setDraft(selectedIds);
+    setSearch("");
+    setOpen(true);
+  };
+
+  // Closing is what saves. Only fires when the ticks actually changed.
+  const closePanel = () => {
+    setOpen(false);
+    if ([...draft].sort().join(",") !== savedKey) onSave(draft);
+  };
+
+  // The panel is rendered on document.body, so the table's overflow box can
+  // never clip it. That means placing it by hand, and again on scroll/resize.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const el = triggerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const margin = 8;
+      const width = Math.min(Math.max(r.width, 260), 340);
+      const below = window.innerHeight - r.bottom - margin;
+      const above = r.top - margin;
+      const flip = below < 240 && above > below;
+      setPos({
+        left: Math.min(
+          Math.max(margin, r.left),
+          window.innerWidth - width - margin
+        ),
+        width,
+        maxHeight: Math.min(360, flip ? above : below),
+        ...(flip
+          ? { bottom: window.innerHeight - r.top + 4 }
+          : { top: r.bottom + 4 }),
+      });
+    };
+    place();
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (panelRef.current?.contains(t) || triggerRef.current?.contains(t)) return;
+      closePanel();
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closePanel();
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  });
 
-  const toggle = (id: string) => {
-    const next = selectedIds.includes(id)
-      ? selectedIds.filter((s) => s !== id)
-      : [...selectedIds, id];
-    onSave(next);
-  };
+  const toggle = (id: string) =>
+    setDraft((d) => (d.includes(id) ? d.filter((x) => x !== id) : [...d, id]));
+
+  // With the panel open the draft is the source of truth, so untick there
+  // instead, otherwise the save on close would put the project straight back.
+  const remove = (id: string) =>
+    open ? toggle(id) : onSave(selectedIds.filter((x) => x !== id));
+
+  const q = search.trim().toLowerCase();
+  const matches = allProjects.filter((p) => p.name.toLowerCase().includes(q));
+  const picked = matches.filter((p) => draft.includes(p.id));
+  const rest = matches.filter((p) => !draft.includes(p.id));
+
+  const row = (p: { id: string; name: string }) => (
+    <label
+      key={p.id}
+      className="flex items-center gap-2 px-2 py-1.5 hover:bg-[var(--primary-light)] rounded cursor-pointer text-sm"
+    >
+      <input
+        type="checkbox"
+        checked={draft.includes(p.id)}
+        onChange={() => toggle(p.id)}
+        className="w-3.5 h-3.5 shrink-0"
+      />
+      <span className="truncate">{p.name}</span>
+    </label>
+  );
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
+    <>
+      <div
+        ref={triggerRef}
+        role="button"
+        tabIndex={0}
+        onClick={() => (open ? closePanel() : openPanel())}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open ? closePanel() : openPanel();
+          }
+        }}
+        className="text-left w-full hover:bg-[var(--primary-light)] rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm cursor-pointer"
       >
         {selected.length > 0 ? (
-          <span className="truncate block max-w-[180px]">
-            {selected.map((s) => s.project.name).join(", ")}
+          <span className="flex flex-wrap items-center gap-1">
+            {selected.slice(0, 2).map((s) => (
+              <span
+                key={s.project.id}
+                className="badge badge-type group gap-1 max-w-[150px]"
+              >
+                <span className="truncate">{s.project.name}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    remove(s.project.id);
+                  }}
+                  title={`Remove ${s.project.name}`}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity leading-none"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+            {selected.length > 2 && (
+              <span className="text-xs text-muted">+{selected.length - 2}</span>
+            )}
           </span>
         ) : (
           <span className="text-muted italic">No projects</span>
         )}
-      </button>
-      {open && (
-        <div className="absolute z-50 top-full left-0 mt-1 bg-white border border-border rounded-md shadow-lg p-2 min-w-[200px] max-h-[300px] overflow-y-auto">
-          {allProjects.map((p) => (
-            <label
-              key={p.id}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer text-sm"
-            >
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(p.id)}
-                onChange={() => toggle(p.id)}
-                className="w-3.5 h-3.5"
-              />
-              {p.name}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
+      </div>
+
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              left: pos.left,
+              top: pos.top,
+              bottom: pos.bottom,
+              width: pos.width,
+              maxHeight: pos.maxHeight,
+            }}
+            className="fixed z-50 flex flex-col bg-card border border-border rounded-md shadow-lg"
+          >
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search projects..."
+              className="m-2 mb-1 text-sm"
+            />
+            <div className="overflow-y-auto p-1 pt-0">
+              {picked.map(row)}
+              {picked.length > 0 && rest.length > 0 && (
+                <div className="border-t border-border my-1" />
+              )}
+              {rest.map(row)}
+              {matches.length === 0 && (
+                <div className="text-center text-muted text-sm py-4">
+                  No project matches &ldquo;{search}&rdquo;
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }

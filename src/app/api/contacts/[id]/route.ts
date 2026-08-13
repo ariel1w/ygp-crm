@@ -1,6 +1,35 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Bring a contact's project links in line with `projectIds` by adding and
+ * removing only what changed. Untouched links keep their createdAt, which is
+ * the date the project was sent, so the projects pages can order by it.
+ */
+async function syncProjects(contactId: string, projectIds: string[]) {
+  const current = await prisma.contactProject.findMany({
+    where: { contactId },
+    select: { projectId: true },
+  });
+  const have = current.map((c) => c.projectId);
+  const want = projectIds ?? [];
+
+  const removed = have.filter((p) => !want.includes(p));
+  const added = want.filter((p) => !have.includes(p));
+
+  if (removed.length) {
+    await prisma.contactProject.deleteMany({
+      where: { contactId, projectId: { in: removed } },
+    });
+  }
+  if (added.length) {
+    await prisma.contactProject.createMany({
+      data: added.map((projectId) => ({ contactId, projectId })),
+      skipDuplicates: true,
+    });
+  }
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -40,17 +69,8 @@ export async function PUT(
     },
   });
 
-  // Sync projects: remove old, add new
   if (body.projectIds !== undefined) {
-    await prisma.contactProject.deleteMany({ where: { contactId: id } });
-    if (body.projectIds.length) {
-      await prisma.contactProject.createMany({
-        data: body.projectIds.map((pid: string) => ({
-          contactId: id,
-          projectId: pid,
-        })),
-      });
-    }
+    await syncProjects(id, body.projectIds);
   }
 
   return NextResponse.json(contact);
@@ -78,17 +98,8 @@ export async function PATCH(
 
   const contact = await prisma.contact.update({ where: { id }, data });
 
-  // Sync projects if provided
   if ("projectIds" in body) {
-    await prisma.contactProject.deleteMany({ where: { contactId: id } });
-    if (body.projectIds?.length) {
-      await prisma.contactProject.createMany({
-        data: body.projectIds.map((pid: string) => ({
-          contactId: id,
-          projectId: pid,
-        })),
-      });
-    }
+    await syncProjects(id, body.projectIds ?? []);
   }
 
   // Return full contact with projects
