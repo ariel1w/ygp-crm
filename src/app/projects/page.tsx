@@ -2,15 +2,28 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { PROJECT_STATUSES, statusInfo } from "@/lib/project-status";
 
-interface Project {
+interface ProjectRow {
   id: string;
   name: string;
-  _count: { contacts: number };
+  counts: Record<string, number>;
+  pitchCount: number;
+  contactCount: number;
+  lastActivity: string | null;
 }
 
+const fmt = (d: string | null) =>
+  d
+    ? new Date(d).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+    : "—";
+
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
@@ -40,17 +53,27 @@ export default function ProjectsPage() {
     loadProjects();
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <div className="inline-block w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-    </div>
-  );
+  // Whatever moved most recently sits at the top. Projects nobody has touched
+  // since the original import sink to the bottom on their own.
+  const sorted = [...projects].sort((a, b) => {
+    if (!a.lastActivity && !b.lastActivity) return a.name.localeCompare(b.name);
+    if (!a.lastActivity) return 1;
+    if (!b.lastActivity) return -1;
+    return b.lastActivity.localeCompare(a.lastActivity);
+  });
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="inline-block w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+      </div>
+    );
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Projects</h1>
+    <div className="max-w-4xl">
+      <h1 className="text-2xl font-bold mb-4">Projects</h1>
 
-      <form onSubmit={handleAdd} className="flex gap-3 mb-6">
+      <form onSubmit={handleAdd} className="flex gap-3 mb-4">
         <input
           placeholder="New project name..."
           value={newName}
@@ -71,12 +94,12 @@ export default function ProjectsPage() {
           <thead>
             <tr>
               <th>Project</th>
-              <th>Contacts Sent To</th>
-              <th></th>
+              <th>Where it stands</th>
+              <th className="whitespace-nowrap">Last move</th>
             </tr>
           </thead>
           <tbody>
-            {projects.map((p) => (
+            {sorted.map((p) => (
               <tr key={p.id}>
                 <td className="font-medium">
                   <Link
@@ -86,14 +109,37 @@ export default function ProjectsPage() {
                     {p.name}
                   </Link>
                 </td>
-                <td>{p._count.contacts}</td>
                 <td>
-                  <Link
-                    href={`/projects/${p.id}`}
-                    className="text-sm font-semibold text-foreground hover:text-primary hover:underline transition-colors"
-                  >
-                    View
-                  </Link>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    {p.pitchCount > 0 && (
+                      <span
+                        className="badge"
+                        style={{
+                          backgroundColor: statusInfo("topitch").bg,
+                          color: statusInfo("topitch").color,
+                        }}
+                      >
+                        {p.pitchCount} to pitch
+                      </span>
+                    )}
+                    {PROJECT_STATUSES.filter((s) => p.counts[s.key]).map((s) => (
+                      <span
+                        key={s.key}
+                        className="badge"
+                        style={{ backgroundColor: s.bg, color: s.color }}
+                      >
+                        {p.counts[s.key]} {s.label.toLowerCase()}
+                      </span>
+                    ))}
+                    {!p.pitchCount && !p.contactCount && (
+                      <span className="text-muted text-sm italic">
+                        Nobody on it yet
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="text-sm text-muted whitespace-nowrap">
+                  {fmt(p.lastActivity)}
                 </td>
               </tr>
             ))}

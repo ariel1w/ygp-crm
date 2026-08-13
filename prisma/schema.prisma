@@ -34,19 +34,44 @@ model Project {
   createdAt DateTime @default(now())
 
   contacts ContactProject[]
+  pitches  PitchTarget[]
 }
 
 model ContactProject {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   contactId String
   projectId String
   sentDate  DateTime?
-  createdAt DateTime @default(now())
+  // Where this project stands with this person. See PROJECT_STATUSES in
+  // src/lib/project-status.ts for the labels and their order.
+  status    String    @default("sent")
+  // When the status was last moved, so each group can list newest first.
+  statusAt  DateTime  @default(now())
+  note      String    @default("")
+  createdAt DateTime  @default(now())
 
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([contactId, projectId])
+  @@index([projectId, status])
+}
+
+/// Someone we intend to pitch a project to who is not a CRM contact yet.
+/// Once it goes out the target becomes a real Contact plus a ContactProject,
+/// and the target row is removed.
+model PitchTarget {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  company   String?
+  note      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }
 
 model Note {
