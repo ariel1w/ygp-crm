@@ -560,7 +560,7 @@ export function InlineProjects({
             {selected.slice(0, 2).map((s) => (
               <span
                 key={s.project.id}
-                className="badge badge-type group gap-1 max-w-[150px]"
+                className="badge badge-project group gap-1 max-w-[150px]"
               >
                 <span className="truncate">{s.project.name}</span>
                 <button

@@ -273,8 +273,8 @@ export default function ContactDetailPage({
                   onClick={() => toggleProject(p.id)}
                   className={`badge cursor-pointer text-sm py-1 px-3 ${
                     form.projectIds.includes(p.id)
-                      ? "bg-primary text-white"
-                      : "badge-type"
+                      ? "badge-project-on"
+                      : "badge-project"
                   }`}
                 >
                   {p.name}
@@ -349,7 +349,7 @@ export default function ContactDetailPage({
               {contact.projects.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {contact.projects.map((p) => (
-                    <span key={p.project.id} className="badge badge-type text-xs">
+                    <span key={p.project.id} className="badge badge-project text-xs">
                       {p.project.name}
                     </span>
                   ))}

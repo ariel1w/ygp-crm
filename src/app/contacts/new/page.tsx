@@ -187,8 +187,8 @@ export default function NewContactPage() {
                 onClick={() => toggleProject(p.id)}
                 className={`badge cursor-pointer text-sm py-1 px-3 ${
                   form.projectIds.includes(p.id)
-                    ? "bg-primary text-white"
-                    : "badge-type"
+                    ? "badge-project-on"
+                    : "badge-project"
                 }`}
               >
                 {p.name}
