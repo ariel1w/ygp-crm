@@ -57,6 +57,17 @@ function getCurrentWeekKey(): string {
   return ALL_WEEKS[0].key;
 }
 
+// The week a given date falls in, falling back to the current week. Used to
+// re-home rows that somehow have no week, so they never vanish from the list.
+function weekForDate(iso: string | null): string {
+  if (iso) {
+    const d = new Date(iso);
+    const w = ALL_WEEKS.find((x) => d >= x.start && d <= x.end);
+    if (w) return w.key;
+  }
+  return getCurrentWeekKey();
+}
+
 // Group weeks by year and month
 function groupWeeks(weeks: WeekInfo[]): Map<number, Map<number, WeekInfo[]>> {
   const grouped = new Map<number, Map<number, WeekInfo[]>>();
@@ -225,7 +236,12 @@ export default function ReadingListPage() {
   );
 
   const deleteSubmission = async (id: string) => {
-    if (!confirm("Delete this submission?")) return;
+    if (
+      !confirm(
+        "Permanently delete this submission from the entire reading list? (To only take it off In Progress, use Remove on the In Progress tab.)"
+      )
+    )
+      return;
     await fetch(`/api/submissions/${id}`, { method: "DELETE" });
     setSubmissions((prev) => prev.filter((s) => s.id !== id));
   };
@@ -237,7 +253,10 @@ export default function ReadingListPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectName: "",
-        week: isProgress ? null : activeTab,
+        // Rows added from the In Progress tab still get the current week, so
+        // the reading list keeps them as an archive after they leave In
+        // Progress.
+        week: isProgress ? currentWeekKey : activeTab,
         inProgress: isProgress,
         dateReceived: new Date().toISOString(),
       }),
@@ -652,8 +671,13 @@ export default function ReadingListPage() {
                     <td>
                       <button
                         onClick={() => {
-                          if (confirm("Remove this project from In Progress?")) {
-                            patchSubmission(s.id, { inProgress: false });
+                          if (confirm("Remove this project from In Progress? It will stay in its week on the reading list.")) {
+                            // A row with no week would disappear from every
+                            // view once unflagged, so give it one first.
+                            patchSubmission(s.id, {
+                              inProgress: false,
+                              ...(s.week ? {} : { week: weekForDate(s.dateReceived) }),
+                            });
                           }
                         }}
                         className="text-xs text-muted hover:text-danger"
