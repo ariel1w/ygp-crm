@@ -54,6 +54,16 @@ input, select, textarea {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+/* Free-text boxes pick their direction from their own content: a box whose
+   first letter is Hebrew flows right-to-left and sits on the right, an
+   English one the opposite. Digits are neutral and follow the box's
+   language; a digits-only box (phone) stays left-to-right. Dates, emails
+   and dropdowns are excluded on purpose. */
+input:where(:not([type]), [type="text"], [type="search"]), textarea {
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);

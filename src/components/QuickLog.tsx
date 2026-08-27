@@ -151,6 +151,7 @@ export default function QuickLog({
                     <div key={i} className="flex gap-2">
                       <textarea
                         rows={2}
+                        dir="auto"
                         placeholder={i === 0 ? "Add a note..." : "Another note..."}
                         value={note}
                         onChange={(e) => updateNote(i, e.target.value)}
@@ -178,6 +179,7 @@ export default function QuickLog({
               Next Action
             </label>
             <input
+              dir="auto"
               placeholder="e.g., Send screener, Follow up on deal, Check in..."
               value={nextAction}
               onChange={(e) => setNextAction(e.target.value)}

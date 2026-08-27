@@ -75,6 +75,7 @@ export default function ProjectsPage() {
 
       <form onSubmit={handleAdd} className="flex gap-3 mb-4">
         <input
+          dir="auto"
           placeholder="New project name..."
           value={newName}
           onChange={(e) => setNewName(e.target.value)}

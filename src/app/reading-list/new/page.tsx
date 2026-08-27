@@ -56,6 +56,7 @@ export default function NewSubmissionPage() {
             </label>
             <input
               required
+              dir="auto"
               value={form.projectName}
               onChange={(e) => setForm({ ...form, projectName: e.target.value })}
             />
@@ -63,6 +64,7 @@ export default function NewSubmissionPage() {
           <div>
             <label className="block text-sm font-medium mb-1">Sender Name</label>
             <input
+              dir="auto"
               value={form.senderName}
               onChange={(e) => setForm({ ...form, senderName: e.target.value })}
             />
@@ -97,6 +99,7 @@ export default function NewSubmissionPage() {
           <div>
             <label className="block text-sm font-medium mb-1">Status</label>
             <input
+              dir="auto"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             />

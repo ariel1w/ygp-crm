@@ -70,6 +70,7 @@ export default function NewContactPage() {
             </label>
             <input
               required
+              dir="auto"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
@@ -92,6 +93,7 @@ export default function NewContactPage() {
           <div>
             <label className="block text-sm font-medium mb-1">Company</label>
             <input
+              dir="auto"
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
             />
@@ -160,6 +162,7 @@ export default function NewContactPage() {
           </label>
           <textarea
             rows={2}
+            dir="auto"
             value={form.lastInteraction}
             onChange={(e) =>
               setForm({ ...form, lastInteraction: e.target.value })
@@ -170,6 +173,7 @@ export default function NewContactPage() {
         <div>
           <label className="block text-sm font-medium mb-1">Next Action</label>
           <input
+            dir="auto"
             value={form.nextAction}
             onChange={(e) => setForm({ ...form, nextAction: e.target.value })}
           />

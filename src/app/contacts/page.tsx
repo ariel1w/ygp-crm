@@ -178,6 +178,7 @@ export default function ContactsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4 bg-white/90 backdrop-blur rounded-xl p-3">
         <input
+          dir="auto"
           placeholder="Search name, company, email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

@@ -187,6 +187,7 @@ export default function ContactDetailPage({
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <input
+                dir="auto"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
@@ -209,6 +210,7 @@ export default function ContactDetailPage({
             <div>
               <label className="block text-sm font-medium mb-1">Company</label>
               <input
+                dir="auto"
                 value={form.company}
                 onChange={(e) => setForm({ ...form, company: e.target.value })}
               />
@@ -241,6 +243,7 @@ export default function ContactDetailPage({
           <div>
             <label className="block text-sm font-medium mb-1">Next Action</label>
             <input
+              dir="auto"
               value={form.nextAction}
               onChange={(e) => setForm({ ...form, nextAction: e.target.value })}
             />

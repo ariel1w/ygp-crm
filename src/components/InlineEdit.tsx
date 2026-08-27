@@ -52,7 +52,8 @@ export function InlineText({
         ref={displayRef}
         onClick={() => (expandable ? onExpand!() : setEditing(true))}
         title={expandable ? "Click to read and edit the full text" : undefined}
-        className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
+        dir="auto"
+        className="text-start w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm"
         style={
           clampLines
             ? {
@@ -90,6 +91,7 @@ export function InlineText({
           setEditing(false);
         }
       }}
+      dir="auto"
       className="text-sm py-0.5 px-1 -mx-1 w-full"
     />
   );
@@ -124,7 +126,8 @@ export function InlineTextArea({
     return (
       <button
         onClick={() => setEditing(true)}
-        className="text-left w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm whitespace-pre-wrap"
+        dir="auto"
+        className="text-start w-full hover:bg-blue-50 rounded px-1 py-0.5 -mx-1 min-h-[24px] text-sm whitespace-pre-wrap"
       >
         {value || <span className="text-muted italic">{placeholder || "—"}</span>}
       </button>
@@ -150,6 +153,7 @@ export function InlineTextArea({
           setEditing(false);
         }
       }}
+      dir="auto"
       className="text-sm py-0.5 px-1 -mx-1 w-full resize-none overflow-hidden"
       rows={2}
     />
@@ -606,6 +610,7 @@ export function InlineProjects({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search projects..."
+                dir="auto"
                 className="text-sm"
               />
             </div>

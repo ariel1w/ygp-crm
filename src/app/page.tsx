@@ -211,10 +211,10 @@ function DashboardSection({
                         })
                       : "Never"}
                   </td>
-                  <td className="max-w-[250px] truncate text-sm">
+                  <td dir="auto" className="max-w-[250px] truncate text-sm">
                     {c.lastInteraction || "—"}
                   </td>
-                  <td className="max-w-[200px] truncate">
+                  <td dir="auto" className="max-w-[200px] truncate">
                     {c.nextAction || "—"}
                   </td>
                   <td className="whitespace-nowrap">

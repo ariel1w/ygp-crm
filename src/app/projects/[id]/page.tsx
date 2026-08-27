@@ -212,6 +212,7 @@ export default function ProjectDetailPage({
         <form onSubmit={addPitch} className="flex gap-2 mb-3 relative">
           <div className="flex-1 relative">
             <input
+              dir="auto"
               placeholder="Who should get this?"
               value={who}
               onChange={(e) => setWho(e.target.value)}
@@ -238,6 +239,7 @@ export default function ProjectDetailPage({
             )}
           </div>
           <input
+            dir="auto"
             placeholder="Company (optional)"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
