@@ -9,13 +9,14 @@ const ARIEL_EMAIL = "ariel1w@gmail.com";
 export default function Nav({ userEmail }: { userEmail?: string | null }) {
   const pathname = usePathname();
   const isAriel = (userEmail ?? "").toLowerCase() === ARIEL_EMAIL;
-  // Projects is its own section now, so it no longer counts as part of the CRM.
+  const isProjects =
+    pathname === "/projects" || pathname.startsWith("/projects/");
+  // Projects lives inside the CRM section, next to Contacts and Dashboard.
   const isCRM =
     pathname === "/" ||
     pathname === "/contacts" ||
-    pathname.startsWith("/contacts/");
-  const isProjects =
-    pathname === "/projects" || pathname.startsWith("/projects/");
+    pathname.startsWith("/contacts/") ||
+    isProjects;
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-border">
@@ -63,16 +64,6 @@ export default function Nav({ userEmail }: { userEmail?: string | null }) {
               >
                 Central Project List
               </Link>
-              <Link
-                href="/projects"
-                className={`px-3 py-1.5 text-sm font-bold rounded-full transition-colors ${
-                  isProjects
-                    ? "bg-foreground text-white"
-                    : "text-muted hover:text-primary"
-                }`}
-              >
-                Projects
-              </Link>
               {isAriel && (
                 <Link
                   href="/tasks"
@@ -107,6 +98,16 @@ export default function Nav({ userEmail }: { userEmail?: string | null }) {
                   }`}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/projects"
+                  className={`px-2 py-1 text-xs font-semibold rounded transition-colors ${
+                    isProjects
+                      ? "text-primary"
+                      : "text-muted hover:text-primary"
+                  }`}
+                >
+                  Projects
                 </Link>
               </div>
             )}
