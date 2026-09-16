@@ -27,6 +27,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const loadProjects = () => {
     fetch("/api/projects")
@@ -43,18 +44,30 @@ export default function ProjectsPage() {
     e.preventDefault();
     if (!newName.trim()) return;
     setAdding(true);
-    await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() }),
-    });
-    setNewName("");
-    setAdding(false);
-    loadProjects();
+    setAddError(null);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        // Keep the typed name so it can be corrected instead of retyped.
+        setAddError(data.error ?? "Could not add the project. Please try again.");
+        return;
+      }
+      setNewName("");
+      loadProjects();
+    } catch {
+      setAddError("Could not add the project. Please try again.");
+    } finally {
+      setAdding(false);
+    }
   };
 
-  // Whatever moved most recently sits at the top. Projects nobody has touched
-  // since the original import sink to the bottom on their own.
+  // Whatever moved most recently sits at the top. A freshly added project
+  // counts its creation as a move, so it appears right at the top.
   const sorted = [...projects].sort((a, b) => {
     if (!a.lastActivity && !b.lastActivity) return a.name.localeCompare(b.name);
     if (!a.lastActivity) return 1;
@@ -78,7 +91,10 @@ export default function ProjectsPage() {
           dir="auto"
           placeholder="New project name..."
           value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          onChange={(e) => {
+            setNewName(e.target.value);
+            if (addError) setAddError(null);
+          }}
           className="flex-1"
         />
         <button
@@ -89,6 +105,11 @@ export default function ProjectsPage() {
           {adding ? "Adding..." : "Add Project"}
         </button>
       </form>
+      {addError && (
+        <p className="-mt-2 mb-4 text-sm font-medium text-red-600" role="alert">
+          {addError}
+        </p>
+      )}
 
       <div className="card p-0 overflow-hidden">
         <table>

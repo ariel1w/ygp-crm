@@ -25,7 +25,9 @@ export async function GET() {
         counts,
         pitchCount: p._count.pitches,
         contactCount: p._count.contacts,
-        lastActivity,
+        // Creating the project counts as its first move, so a brand-new
+        // project surfaces at the top of the list instead of sinking.
+        lastActivity: lastActivity ?? p.createdAt,
       };
     })
   );
@@ -33,8 +35,20 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const project = await prisma.project.create({
-    data: { name: body.name },
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name) {
+    return NextResponse.json({ error: "Project name is required" }, { status: 400 });
+  }
+  const existing = await prisma.project.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+    select: { name: true },
   });
+  if (existing) {
+    return NextResponse.json(
+      { error: `A project called "${existing.name}" already exists` },
+      { status: 409 }
+    );
+  }
+  const project = await prisma.project.create({ data: { name } });
   return NextResponse.json(project, { status: 201 });
 }
