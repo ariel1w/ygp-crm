@@ -8,6 +8,7 @@ import { TEAM_MEMBERS } from "@/lib/constants";
 import { generateWeeks, getMonthName, type WeekInfo } from "@/lib/weeks";
 import { InlineText, InlineDate, InlineSelect } from "@/components/InlineEdit";
 import MoveToSlateDialog from "@/components/MoveToSlateDialog";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface Submission {
   id: string;
@@ -87,6 +88,14 @@ export default function ReadingListPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   // The row being carried over to the Central Project List, if any.
   const [moveTarget, setMoveTarget] = useState<Submission | null>(null);
+  // The pending "Are you sure?" for Remove and Delete.
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+    run: () => void | Promise<void>;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>(IN_PROGRESS);
   const [expandedYear, setExpandedYear] = useState<number>(2026);
@@ -205,8 +214,9 @@ export default function ReadingListPage() {
       9, // YGP Contact
       14, // Email / Phone
       20, // Status
-      ...(isInProgressTab ? [11] : [9, 7, 6]), // Move + Remove | Notified By, Notified?, In Progress
-      4, // delete
+      // In Progress: one actions cell (Move, Remove, Delete).
+      // Weeks: Notified By, Notified?, In Progress, Delete.
+      ...(isInProgressTab ? [15] : [9, 7, 6, 4]),
     ];
     const total = weights.reduce((a, b) => a + b, 0);
     return weights.map((w) => (w / total) * 100);
@@ -240,15 +250,34 @@ export default function ReadingListPage() {
     []
   );
 
-  const deleteSubmission = async (id: string) => {
-    if (
-      !confirm(
-        "Permanently delete this submission from the entire reading list? (To only take it off In Progress, use Remove on the In Progress tab.)"
-      )
-    )
-      return;
-    await fetch(`/api/submissions/${id}`, { method: "DELETE" });
-    setSubmissions((prev) => prev.filter((s) => s.id !== id));
+  const deleteSubmission = (s: Submission) => {
+    setConfirmAction({
+      title: "Delete from the reading list?",
+      message: `"${s.projectName || "This project"}" will be permanently deleted from the entire reading list.${
+        s.inProgress ? "\n\nTo only take it off In Progress, use Remove instead." : ""
+      }`,
+      confirmLabel: "Delete",
+      danger: true,
+      run: async () => {
+        await fetch(`/api/submissions/${s.id}`, { method: "DELETE" });
+        setSubmissions((prev) => prev.filter((x) => x.id !== s.id));
+      },
+    });
+  };
+
+  const removeFromInProgress = (s: Submission) => {
+    setConfirmAction({
+      title: "Remove from In Progress?",
+      message: `"${s.projectName || "This project"}" will leave In Progress but stay in its week on the reading list.`,
+      confirmLabel: "Remove",
+      run: () =>
+        // A row with no week would disappear from every view once
+        // unflagged, so give it one first.
+        patchSubmission(s.id, {
+          inProgress: false,
+          ...(s.week ? {} : { week: weekForDate(s.dateReceived) }),
+        }),
+    });
   };
 
   const addInlineSubmission = async () => {
@@ -480,7 +509,6 @@ export default function ReadingListPage() {
                 {!isInProgressTab && <th>Notified By</th>}
                 {!isInProgressTab && <th>Notified?</th>}
                 {!isInProgressTab && <th>In Progress</th>}
-                {isInProgressTab && <th></th>}
                 <th></th>
               </tr>
             </thead>
@@ -672,39 +700,34 @@ export default function ReadingListPage() {
                       />
                     </td>
                   )}
-                  {isInProgressTab && (
-                    <td>
+                  <td className="whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      {isInProgressTab && (
+                        <>
+                          <button
+                            onClick={() => setMoveTarget(s)}
+                            title="Move this project to the Central Project List"
+                            className="px-2 py-1 text-xs font-semibold rounded-md bg-foreground text-white hover:bg-primary transition-colors"
+                          >
+                            Move to Central List
+                          </button>
+                          <button
+                            onClick={() => removeFromInProgress(s)}
+                            title="Take this project off In Progress"
+                            className="px-2 py-1 text-xs font-semibold rounded-md border border-border text-foreground hover:border-primary hover:text-primary transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      )}
                       <button
-                        onClick={() => setMoveTarget(s)}
-                        title="Move this project to the Central Project List"
-                        className="text-xs font-semibold text-primary hover:underline whitespace-nowrap block mb-0.5"
+                        onClick={() => deleteSubmission(s)}
+                        title="Delete from the reading list"
+                        className="px-1.5 py-1 text-xs text-muted hover:text-danger"
                       >
-                        Move to Central List
+                        ✕
                       </button>
-                      <button
-                        onClick={() => {
-                          if (confirm("Remove this project from In Progress? It will stay in its week on the reading list.")) {
-                            // A row with no week would disappear from every
-                            // view once unflagged, so give it one first.
-                            patchSubmission(s.id, {
-                              inProgress: false,
-                              ...(s.week ? {} : { week: weekForDate(s.dateReceived) }),
-                            });
-                          }
-                        }}
-                        className="text-xs text-muted hover:text-danger"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  )}
-                  <td>
-                    <button
-                      onClick={() => deleteSubmission(s.id)}
-                      className="text-muted hover:text-danger text-xs"
-                    >
-                      x
-                    </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -737,6 +760,21 @@ export default function ReadingListPage() {
           </table>
         </div>
       </div>
+
+      {confirmAction && (
+        <ConfirmDialog
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel={confirmAction.confirmLabel}
+          danger={confirmAction.danger}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={async () => {
+            const { run } = confirmAction;
+            setConfirmAction(null);
+            await run();
+          }}
+        />
+      )}
 
       {moveTarget && (
         <MoveToSlateDialog

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { STAGES, STAGE_COLUMNS } from "@/lib/slate-constants";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export interface MoveSource {
   id: string;
@@ -38,6 +39,7 @@ export default function MoveToSlateDialog({ source, onClose, onMoved }: Props) {
   }));
   const [slate, setSlate] = useState<SlateRow[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,20 +72,17 @@ export default function MoveToSlateDialog({ source, onClose, onMoved }: Props) {
 
   const stageLabel = (key: string) => STAGES.find((s) => s.key === key)?.label ?? key;
 
-  const move = async () => {
+  const askToMove = () => {
     if (!name) {
       setError("Give the project a name first.");
       return;
     }
     if (duplicate) return;
-    if (
-      !confirm(
-        `Move "${name}" to the Central Project List?\n\nIt will be added to the top of ${stageLabel(
-          stage
-        )} and deleted from the reading list.`
-      )
-    )
-      return;
+    setConfirming(true);
+  };
+
+  const move = async () => {
+    setConfirming(false);
     setSubmitting(true);
     setError(null);
     try {
@@ -255,7 +254,7 @@ export default function MoveToSlateDialog({ source, onClose, onMoved }: Props) {
               Cancel
             </button>
             <button
-              onClick={move}
+              onClick={askToMove}
               disabled={submitting || !!duplicate || !name}
               className="btn btn-primary disabled:opacity-50"
             >
@@ -264,6 +263,18 @@ export default function MoveToSlateDialog({ source, onClose, onMoved }: Props) {
           </div>
         </div>
       </div>
+
+      {confirming && (
+        <ConfirmDialog
+          title="Move to the Central Project List?"
+          message={`"${name}" will be added to the top of ${stageLabel(
+            stage
+          )} and deleted from the reading list.`}
+          confirmLabel="Move"
+          onCancel={() => setConfirming(false)}
+          onConfirm={move}
+        />
+      )}
     </div>
   );
 }
