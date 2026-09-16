@@ -22,6 +22,9 @@ export default function SlatePage() {
   const [projects, setProjects] = useState<SlateProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState("development");
+  // A row just moved here from the reading list: open its stage and
+  // highlight it until the user does anything.
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   // Pending manual order for the active stage. null = nothing moved yet.
   const [draftIds, setDraftIds] = useState<string[] | null>(null);
@@ -35,13 +38,42 @@ export default function SlatePage() {
   const loadData = useCallback(() => {
     fetch("/api/slate")
       .then((r) => r.json())
-      .then(setProjects)
+      .then((rows: SlateProject[]) => {
+        setProjects(rows);
+        // "?new=<id>&stage=<stage>" arrives from the reading list's Move
+        // dialog: open that stage and highlight the row. The params are
+        // dropped right away so a refresh doesn't re-highlight.
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("new");
+        const stage = params.get("stage");
+        if (id) {
+          if (stage && STAGES.some((s) => s.key === stage)) setActiveStage(stage);
+          setHighlightId(id);
+          window.history.replaceState(null, "", "/slate");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (!highlightId || loading) return;
+    document
+      .getElementById(`slate-${highlightId}`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    const clear = () => setHighlightId(null);
+    const t = window.setTimeout(clear, 8000);
+    window.addEventListener("mousedown", clear, { once: true });
+    window.addEventListener("keydown", clear, { once: true });
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("mousedown", clear);
+      window.removeEventListener("keydown", clear);
+    };
+  }, [highlightId, loading]);
 
   // Warn before closing the tab or hitting back with an unsaved order.
   useEffect(() => {
@@ -261,6 +293,7 @@ export default function SlatePage() {
             {filtered.map((p, i) => (
               <tr
                 key={p.id}
+                id={`slate-${p.id}`}
                 draggable={dragArmedId === p.id}
                 onDragStart={() => setDragIndex(i)}
                 onDragOver={(e) => {
@@ -281,11 +314,13 @@ export default function SlatePage() {
                   setDragArmedId(null);
                 }}
                 className={
-                  movedIds.has(p.id)
-                    ? "bg-amber-50"
-                    : dragIndex === i
-                      ? "opacity-50"
-                      : ""
+                  highlightId === p.id
+                    ? "bg-emerald-100 ring-2 ring-inset ring-emerald-400"
+                    : movedIds.has(p.id)
+                      ? "bg-amber-50"
+                      : dragIndex === i
+                        ? "opacity-50"
+                        : ""
                 }
               >
                 <td className="whitespace-nowrap pl-1 pr-0">

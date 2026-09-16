@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { TEAM_MEMBERS } from "@/lib/constants";
 import { generateWeeks, getMonthName, type WeekInfo } from "@/lib/weeks";
 import { InlineText, InlineDate, InlineSelect } from "@/components/InlineEdit";
+import MoveToSlateDialog from "@/components/MoveToSlateDialog";
 
 interface Submission {
   id: string;
@@ -81,7 +83,10 @@ function groupWeeks(weeks: WeekInfo[]): Map<number, Map<number, WeekInfo[]>> {
 }
 
 export default function ReadingListPage() {
+  const router = useRouter();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  // The row being carried over to the Central Project List, if any.
+  const [moveTarget, setMoveTarget] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>(IN_PROGRESS);
   const [expandedYear, setExpandedYear] = useState<number>(2026);
@@ -200,7 +205,7 @@ export default function ReadingListPage() {
       9, // YGP Contact
       14, // Email / Phone
       20, // Status
-      ...(isInProgressTab ? [6] : [9, 7, 6]), // Remove | Notified By, Notified?, In Progress
+      ...(isInProgressTab ? [11] : [9, 7, 6]), // Move + Remove | Notified By, Notified?, In Progress
       4, // delete
     ];
     const total = weights.reduce((a, b) => a + b, 0);
@@ -670,6 +675,13 @@ export default function ReadingListPage() {
                   {isInProgressTab && (
                     <td>
                       <button
+                        onClick={() => setMoveTarget(s)}
+                        title="Move this project to the Central Project List"
+                        className="text-xs font-semibold text-primary hover:underline whitespace-nowrap block mb-0.5"
+                      >
+                        Move to Central List
+                      </button>
+                      <button
                         onClick={() => {
                           if (confirm("Remove this project from In Progress? It will stay in its week on the reading list.")) {
                             // A row with no week would disappear from every
@@ -725,6 +737,19 @@ export default function ReadingListPage() {
           </table>
         </div>
       </div>
+
+      {moveTarget && (
+        <MoveToSlateDialog
+          source={moveTarget}
+          onClose={() => setMoveTarget(null)}
+          onMoved={(project) => {
+            // The row is gone from the reading list; show it in its new home.
+            setSubmissions((prev) => prev.filter((s) => s.id !== moveTarget.id));
+            setMoveTarget(null);
+            router.push(`/slate?new=${project.id}&stage=${project.stage}`);
+          }}
+        />
+      )}
 
       {/* Popup for the 📝 note and for any text too long to show in the row */}
       {textModal && (
