@@ -707,9 +707,21 @@ export default function ReadingListPage() {
                           <button
                             onClick={() => setMoveTarget(s)}
                             title="Move this project to the Central Project List"
-                            className="px-2 py-1 text-xs font-semibold rounded-md bg-foreground text-white hover:bg-primary transition-colors"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-md bg-foreground text-white hover:bg-primary transition-colors"
                           >
-                            Move to Central List
+                            <svg
+                              viewBox="0 0 16 16"
+                              className="w-3 h-3 rtl:-scale-x-100"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M2 8h11M9 4l4 4-4 4" />
+                            </svg>
+                            Central
                           </button>
                           <button
                             onClick={() => removeFromInProgress(s)}
