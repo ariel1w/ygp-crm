@@ -216,7 +216,7 @@ export default function ReadingListPage() {
       20, // Status
       // In Progress: one actions cell (Move, Remove, Delete).
       // Weeks: Notified By, Notified?, In Progress, Delete.
-      ...(isInProgressTab ? [15] : [9, 7, 6, 4]),
+      ...(isInProgressTab ? [23] : [9, 7, 6, 4]),
     ];
     const total = weights.reduce((a, b) => a + b, 0);
     return weights.map((w) => (w / total) * 100);
@@ -307,7 +307,7 @@ export default function ReadingListPage() {
     );
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 lg:-mx-4">
       {/* Sidebar with year/month/week navigation */}
       <div className="w-56 flex-shrink-0">
         <div className="card p-2 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
@@ -489,7 +489,7 @@ export default function ReadingListPage() {
           </div>
         </div>
 
-        <div className="card p-0 overflow-hidden">
+        <div className="card p-2! overflow-hidden">
           <table className="table-fixed-cols">
             <colgroup>
               {colWidths.map((w, i) => (
@@ -700,8 +700,8 @@ export default function ReadingListPage() {
                       />
                     </td>
                   )}
-                  <td className="whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1">
+                  <td>
+                    <div className="flex flex-wrap items-center justify-end gap-1">
                       {isInProgressTab && (
                         <>
                           <button
